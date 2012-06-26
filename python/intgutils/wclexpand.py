@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 
 import os
+import  sys
+import wclutils
 import time
+import re
+from collections import OrderedDict
+from WrapperUtils import *
+
+debug = 1
 
 def expandDollarVars(fulldict, temp_dict, filepat):
     if debug: print "expanding filepat:", filepat
@@ -114,14 +121,16 @@ def expandDollarVars(fulldict, temp_dict, filepat):
     
 def expandWCL(wrapopts):
     res = dict()
+    if debug: print "we are in:" , os.getcwd()
     for wcltype in ["config", "input", "output", "ancillary"]:
         try:
-	    if wcltype in WrapperOptions:
-		fwcl = open(WrapperOptions[wcltype],"r")
+	    if wcltype in wrapopts:
+		fwcl = open(wrapopts[wcltype],"r")
 		res.update(wclutils.read_wcl(fwcl))
 		fwcl.close()
 	except:
-	    print "Failed to open %s. Exiting." %  WrapperOptions[wcltype]
+            raise
+	    # print "Failed to open '%s'. Exiting." %  wrapopts[wcltype]
 	    # generate_provenance_on_exit(prov_file,starttime=starttime,exit_status=1)
 	    # exit(1)
     if debug: print res
@@ -137,7 +146,7 @@ def recurseExpand(res,cur):
 	else:
 	    recurseExpand(res,cur[sk])
 
-def genProvenance(WCLOptions, exitstatus):
+def genProvenance(WCLOptions, exitstatus, starttime):
     provenance=OrderedDict()
 
     provenance['wrapper'] =  OrderedDict(exitstatus = exitstatus , walltime =  time.time() - starttime)
