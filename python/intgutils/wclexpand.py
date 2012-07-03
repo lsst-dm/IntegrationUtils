@@ -122,9 +122,9 @@ def expandDollarVars(fulldict, temp_dict, filepat):
 def expandWCL(wrapopts):
     res = dict()
     if debug: print "we are in:" , os.getcwd()
-    for wcltype in ["config", "input", "output", "ancillary"]:
+    for wcltype in ["config", "input", "output", "ancilliary"]:
         try:
-	    if wcltype in wrapopts:
+	    if wcltype in wrapopts and wrapopts[wcltype]:
 		fwcl = open(wrapopts[wcltype],"r")
 		res.update(wclutils.read_wcl(fwcl))
 		fwcl.close()
