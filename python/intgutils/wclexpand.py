@@ -54,8 +54,10 @@ def expandDollarVars(fulldict, temp_dict, filepat):
         # :trim trims off .whatever suffixes
         #
         if func[0] in "0123456789":
-            format = "%%0%s" % func
-            parval = func % int(parval)
+            format = "%%0%sd" % func
+            if debug: print "applying func %s to %s" % (func, parval)
+            if debug: print "format is %s" % format
+            parval = format % int(parval)
  
         if func == 'trim':
             parval =parval[0:parval.find('.')]
