@@ -154,19 +154,19 @@ def genProvenance(WCLOptions, exitstatus, starttime):
     provenance['wrapper'] =  OrderedDict(exitstatus = exitstatus , walltime =  time.time() - starttime)
 
     exec01 = OrderedDict()
-    exec01['application'] = 'DECam_crosstalk'
+    exec01['application'] = WCLOptions['config']['command']
     exec01['walltime'] = provenance['wrapper']['walltime']
     cmdlineargs = ''
     for args in sys.argv[1:]:
 	cmdlineargs += ' ' + args
     exec01['commandline'] = os.path.realpath(sys.argv[0])+cmdlineargs
 
-    for ftype in [ 'input', 'output', 'ancillary' ]:
+    for ftype in [ 'input', 'output', 'ancilliary' ]:
 
 	files = OrderedDict()
 	n_file = 1
 	for x in WCLOptions.get(ftype,{}).keys():
-	    if WCLOptions[ftype][x].has_key('file_template'):
+	    if ''.__class__ != WCLOptions[ftype][x].__class__ and WCLOptions[ftype][x].has_key('file_template'):
 		for fname in WCLOptions[ftype][x]['file_template']['filename']:
      
 		    if 0 == os.access(fname, os.R_OK):
@@ -177,14 +177,13 @@ def genProvenance(WCLOptions, exitstatus, starttime):
 		    else:
 			print "Expected ", ftype, " file ", fname , "not present"
 			exit(1)
-	    else:
+	    elif ''.__class__ != WCLOptions[ftype][x].__class__ :
 		fname =  WCLOptions[ftype][x]['filename']
 		if 0 == os.access(fname, os.R_OK):
 		    files['file_%d' % n_file] = WCLOptions[ftype][x]
 		    n_file = n_file+ 1
 		else:
 		    print "Expected ", ftype, " file ", fname , "not present"
-		    exit(1)
 		
 	exec01[ftype] = files
 
