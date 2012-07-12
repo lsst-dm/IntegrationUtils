@@ -196,6 +196,9 @@ def genProvenance(WCLOptions, exitstatus, starttime):
 	exit(1)
 
 def buildStockCommand(WCLOptions, doubledash = 0):
+    if not "config" in WCLOptions:
+         return "true"
+
     cmdlist = [ WCLOptions["config"]["command"] ]
 
     for k, v in WCLOptions["config"]["command_line"].items():
@@ -211,3 +214,18 @@ def buildStockCommand(WCLOptions, doubledash = 0):
     return ' '.join(cmdlist)
 
 
+if __name__ == '__main__':
+    print "argv: ", sys.argv
+    os.chdir('test')
+    f = open('testlist', 'r')
+    for line in f.readlines():
+        print "line: " , line
+        argv = line[:-1].split(' ')
+        sys.argv = ['testing'] + argv
+        print "argv: ", sys.argv
+        p = WrapperOptionParser()
+        WrapperOptions = p.parse()
+        WCLOptions = expandWCL(WrapperOptions)
+        print "got WCLOptions of", WCLOptions
+        print "would build command:" , buildStockCommand(WCLOptions)
+    f.close()

@@ -1,0 +1,12 @@
+<config>
+  command = DECam_crosstalk 
+  outlog =  ${input.raw.filename:trim}_${command}.log
+  <command_line>
+    _input = ${input.raw.filename}
+    _outprefix = ${input.raw.filename:trim}
+    maxhdunum = 63 
+    verbose = 3 
+    crosstalk = /blue-ccd-data/mengel_work/cal/DECam.xtalk 
+    photflag = 1
+  </command_line>
+</config>

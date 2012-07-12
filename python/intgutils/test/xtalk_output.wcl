@@ -1,0 +1,8 @@
+<output>
+  <split_ccd>
+    <file_template>
+      filename = ${input.raw.filename:trim}_${ccd:2}.fits
+      ccd = (1-62)
+    </file_template>
+  </split_ccd>
+</output>

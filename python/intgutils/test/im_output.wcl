@@ -1,0 +1,6 @@
+<output>
+  <biased>
+     filename = ${input.split_ccd.filename:trim}_bias.fits
+  </biased>
+</output>
+

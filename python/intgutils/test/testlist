@@ -1,0 +1,4 @@
+--input im_input.wcl
+--input im_input.wcl --output im_output.wcl
+--config im_config.wcl --input  im_input.wcl --output im_output.wcl
+--config xtalk_config.wcl --input xtalk_input.wcl --output xtalk_output.wcl

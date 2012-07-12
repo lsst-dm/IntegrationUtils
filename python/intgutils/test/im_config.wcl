@@ -1,0 +1,20 @@
+
+<config>
+  command = imcorrect
+  caldir = /blue-ccd-data/mengel_work/cal
+  <command_line>
+    _input = applybias_in.list
+    output = applibias_out.list
+    overscan =
+    bias = /blue-ccd-data/mengel_work/cal/biascor_${input.split_ccd.ccd:2}.fits 
+    photflattens = /blue-ccd-data/mengel_work/cal/photflatcor_${input.split_ccd.ccd:2}.fits 
+    flatten = ${config.caldir}/flatcor_${input.split_ccd.ccd:2}.fits 
+    bpm = ${config.caldir}/bpm_${input.split_ccd.ccd:2}.fits 
+    pupil = ${config.caldir}/pupil_${input.split_ccd.ccd:2}.fits 
+    variancetype = WEIGHT
+    interpolate_col = 2.0
+    updatekeyword = SKYBRITE
+    MEF =
+    verbose = 3 
+  </command_line>
+</config>
