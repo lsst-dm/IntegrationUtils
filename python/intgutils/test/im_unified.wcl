@@ -1,11 +1,23 @@
-
-<config>
-  command = imcorrect
+<files>
+  <split_ccd>
+    ccd=1
+    filename=decam-sispi-00022719_${ccd:2}.fits
+  </split_ccd>
+  <biased>
+     filename = ${input.split_ccd.filename:trim}_bias.fits
+  </biased>
+</files>
+<wrapper>
   caldir = /blue-ccd-data/mengel_work/cal
-  <command_line>
-    _input = applybias_in.list
+</wrapper>
+<exec_1>
+  parents = files.split_ccd
+  children = files.biased
+  command = imcorrect
+  cmdargs = applybias_in.list
+  cmdflags = overscan,MEF
+  <cmdopts>
     output = applibias_out.list
-    overscan =
     bias = /blue-ccd-data/mengel_work/cal/biascor_${input.split_ccd.ccd:2}.fits 
     photflattens = /blue-ccd-data/mengel_work/cal/photflatcor_${input.split_ccd.ccd:2}.fits 
     flatten = ${config.caldir}/flatcor_${input.split_ccd.ccd:2}.fits 
@@ -14,7 +26,6 @@
     variancetype = WEIGHT
     interpolate_col = 2.0
     updatekeyword = SKYBRITE
-    MEF =
     verbose = 3 
-  </command_line>
+  </cmdopts>
 </config>

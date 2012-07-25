@@ -1,0 +1,19 @@
+<files>
+  <raw>
+      filename = /blue-ccd-data/mengel/work/crosstalk_wrap/run/decam-sispi-00022719.fits.fz
+  </raw>
+  <split_ccd>
+      filename = ${input.raw.filename:trim}_${ccd:2}.fits
+      ccd = (1-62)
+  </split_ccd>
+</files>
+<exec_1>
+  command = DECam_crosstalk 
+  cmdargs = ${input.raw.filename},${input.raw.filename:trim}
+  <cmdopts>
+    maxhdunum = 63 
+    verbose = 3 
+    crosstalk = /blue-ccd-data/mengel_work/cal/DECam.xtalk 
+    photflag = 1
+  </cmdopts>
+</exec_1>

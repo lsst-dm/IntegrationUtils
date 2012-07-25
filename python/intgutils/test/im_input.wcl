@@ -1,7 +1,0 @@
-
-<input>
-  <split_ccd>
-    ccd=1
-    filename=decam-sispi-00022719_${ccd:2}.fits
-  </split_ccd>
-</input>
