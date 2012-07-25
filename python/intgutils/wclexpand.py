@@ -10,117 +10,99 @@ from WrapperUtils import *
 
 debug = 1
 
-def expandDollarVars(fulldict, temp_dict, filepat):
-    if debug: print "expanding filepat:", filepat
+var_re = re.compile("\${(.*?)}")
+
+def expandDollarVars(fulldict, temp_dict, configval):
+    if debug: print "expanding configval:", configval
     temp_dict1 = {}
-    filepars = re.findall("\${(.+?)}",filepat)
-    for filepar in filepars:
 
-        if filepar.find(":") > 0:
-            name, func = filepar.split(":")
-        else:
-            name = filepar
-            func = "none"
-
-        #
-        # handle foo.bar.baz or just foo
-        #
-        if name.find(".") > 0:
-            list = name.split(".")
-            d = fulldict
-        else:
-            list = [name]
-            d = temp_dict
-
-	for i in range(0,len(list)):
-	    d = d[list[i]]
-
-        parval = d
-
-        if parval.__class__ != ''.__class__:
-            print "variable ", name ," lookup yeilded dictionary: ", d
-            exit(1)
-
-        #
-        # handle ranges
-        #
-        if parval.startswith("(") and parval.endswith(")"):
-            temp_dict1[filepar]=parval
-            continue
-
-        #
-        # apply formatting functions:
-        # :n makes applies %0nd format
-        # :trim trims off .whatever suffixes
-        #
-        if func[0] in "0123456789":
-            format = "%%0%sd" % func
-            if debug: print "applying func %s to %s" % (func, parval)
-            if debug: print "format is %s" % format
-            parval = format % int(parval)
- 
-        if func == 'trim':
-            parval =parval[0:parval.find('.')]
-         
-        filepat = filepat.replace('${'+filepar+'}',parval)
-        if debug: print filepat
-
-    filelist = [filepat] # .. create an initial file list with one item
-
-    for key in temp_dict1.keys():
-
-        if debug: print "Now doing %s list items" % key
-        templist = [] # .. temporary list for each key
-
-        for filelist_item in filelist:
-       
-            for item in temp_dict1[key].lstrip("(").rstrip(")").split(","):
-
-                # ... Check to see if this is a range of numeric values
-                isRange = False
-                if item.count("-") == 1:
-	            nums = item.split("-")
-                    if len(nums) == 2:
-                        if nums[0].isdigit() and nums[1].isdigit():
-	                    num1 = int(nums[0])
-	                    num2 = int(nums[1])
-	                    if num1 > num2:
-                                print "Lower bound %d > upper bound %d" % (num1,num2)
-                                exit(1)
-                            isRange = True
-                       
-                # ... Case when range of numeric values     
-                if isRange:
-                    for i in range(num1,num2+1):
-	                if i < 10:
-	                    nums = '0'+str(i)
-                        else:
-	                    nums = str(i)
-                        newitem = filelist_item.replace('${'+key+'}',nums)
-                        templist.append(newitem)
-
-                # ... Case when single item or numeric value
-                else:
-                    tmps = item
-                    if tmps.isdigit():
-                        num = int(tmps)
-	                if num < 10:
-	                    tmps = '0'+str(num)
-                        else:
-	                    tmps = str(num)
-                    newitem = filelist_item.replace('${'+key+'}',tmps)
-                    templist.append(newitem)  
-
-        filelist = templist # .. update the filelist
-        if debug:
-            for item in filelist:
-                print item
-
-    if len(filelist) > 1:
-        return filelist
-    else:
-        return filelist[0]
+    def replfunc(configval, fulldict = fulldict, temp_dict = temp_dict):
+        return expandVar(configval, fulldict, temp_dict)
     
+    limit = 100
+    while var_re.search(configval, 1) and limit > 0:
+        configval = var_re.sub( replfunc, configval ) 
+        limit = limit - 1
+ 
+    return configval
+
+def expandVar(match, fulldict, temp_dict):
+
+    if debug: print "expandvar"
+
+    varname = match.group(1)
+
+    if debug: print "expandvar varname is " , varname
+
+    if varname.find(":") > 0:
+	name, func = varname.split(":")
+    else:
+	name = varname
+	func = "none"
+
+    #
+    # handle foo.bar.baz or just foo
+    #
+    if name.find(".") > 0:
+	list = name.split(".")
+	d = fulldict
+    else:
+	list = [name]
+	d = temp_dict
+
+    for i in range(0,len(list)):
+	try:
+	    d = d[list[i]]
+	except:
+	    print "undefined section in ", '.'.join(list)
+	    d = {}
+
+    expanded = d
+
+    if debug: print "found", expanded
+    #
+    # apply formatting functions:
+    # :n makes applies %0nd format
+    # :trim trims off .whatever suffixes
+    #
+    if func[0] in "0123456789":
+	format = "%%0%sd" % func
+	if debug: print "applying func %s to %s" % (func, expanded)
+	if debug: print "format is %s" % format
+	expanded = format % int(expanded)
+
+    if func == 'trim':
+	expanded =expanded[0:expanded.find('.')]
+
+    if debug: print "converted ", varname, " to ", expanded 
+
+    return expanded
+     
+range_re = re.compile("\(([0-9]+)-([0-9]+)\)(:[0-9]+)?")
+
+def expandFileRange(dict):
+
+    for k in dict.keys():
+       if dict[k].has_key("filename"):
+           filename = dict[k]["filename"]
+           m = range_re.search(filename)
+
+           if m and m.group(3):
+              replfmt = "%%%sd" % m.group(3)[1:]
+           else:
+              replfmt = "%d"
+
+	   if m:
+	       template = dict[k]
+               del dict[k]
+               for i in range(int(m.group(1)), int(m.group(2))):
+                    k2 = "%s_%d" % (k, i)
+                    repl=replfmt % i
+                    dict[k2] = {}
+                    dict[k2].update(template)
+                    newfilename = range_re.sub(repl, dict[k2]["filename"])
+                    dict[k2]["filename"] = newfilename
+        
 def expandWCL(wrapopts):
     res = dict()
     if debug: print "we are in:" , os.getcwd()
@@ -139,6 +121,9 @@ def expandWCL(wrapopts):
 
     for k in res.keys():
          recurseExpand(res, res[k])
+   
+    expandFileRange(res['files'])
+
     return res
 
 def recurseExpand(res,cur):
@@ -151,65 +136,47 @@ def recurseExpand(res,cur):
 def genProvenance(WCLOptions, exitstatus, starttime):
     provenance=OrderedDict()
 
-    provenance['wrapper'] =  OrderedDict(exitstatus = exitstatus , walltime =  time.time() - starttime)
-
-    exec01 = OrderedDict()
-    exec01['application'] = WCLOptions['config']['command']
-    exec01['walltime'] = provenance['wrapper']['walltime']
     cmdlineargs = ''
     for args in sys.argv[1:]:
 	cmdlineargs += ' ' + args
-    exec01['commandline'] = os.path.realpath(sys.argv[0])+cmdlineargs
 
-    for ftype in [ 'input', 'output', 'ancilliary' ]:
+    provenance['wrapper'] =  OrderedDict(exitstatus = exitstatus , walltime =  time.time() - starttime, cmdlineargs = cmdlineargs)
+    provenance['wrapper'].update(WCLOptions.get('wrapper',{}))
 
-	files = OrderedDict()
-	n_file = 1
-	for x in WCLOptions.get(ftype,{}).keys():
-	    if ''.__class__ != WCLOptions[ftype][x].__class__ and WCLOptions[ftype][x].has_key('file_template'):
-		for fname in WCLOptions[ftype][x]['file_template']['filename']:
-     
-		    if 0 == os.access(fname, os.R_OK):
-			files['file_%d' % n_file] = OrderedDict()
-			files['file_%d' % n_file].update(WCLOptions[ftype][x]['file_template'])
-			files['file_%d' % n_file]['filename'] = fname
-			n_file = n_file + 1
-		    else:
-			print "Expected ", ftype, " file ", fname , "not present"
-			exit(1)
-	    elif ''.__class__ != WCLOptions[ftype][x].__class__ :
-		fname =  WCLOptions[ftype][x]['filename']
-		if 0 == os.access(fname, os.R_OK):
-		    files['file_%d' % n_file] = WCLOptions[ftype][x]
-		    n_file = n_file+ 1
-		else:
-		    print "Expected ", ftype, " file ", fname , "not present"
-		
-	exec01[ftype] = files
+    i = 1
+    while WCLOptions.has_key("exec_%d"%i ):
+         provenance["exec_%d"%i] = WCLOptions["exec_%d"%i]
+         i = i + 1
 
-    provenance['exec01'] = exec01
-    prov_file = "proto_prov.wcl"
-
+    for k in ('files', 'parents', 'children'):
+        provenance[k] = WCLOptions.get(k,{})
+    
+    prov_file =  "proto_prov.wcl"
     status = writeProvenance(prov_file,OrderedDict(provenance=provenance))
+
     if status != 0:
 	print "Failed to open %s. Exiting." %  prov_file
 	exit(1)
 
-def buildStockCommand(WCLOptions, doubledash = 0):
-    if not "config" in WCLOptions:
-         return "true"
+def buildStockCommand(WCLOptions, nth = 1,  doubledash = 0):
 
-    cmdlist = [ WCLOptions["config"]["command"] ]
+    if not "exec_%d" % nth in WCLOptions:
+         return None
 
-    for k, v in WCLOptions["config"]["command_line"].items():
-	if k.startswith("_"):
+    cmdlist = [ WCLOptions["exec_%d" % nth]["command"] ]
+ 
+    if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
+	for v in WCLOptions["exec_%d" % nth]["cmdargs"].split(','):
 	    cmdlist.append(v)
-	else:
+
+    if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
+	for v in WCLOptions["exec_%d" % nth]["cmdflags"].split(','):
+	    cmdlist.append("%s%s" % (["-","--"][doubledash], v))
+     
+    if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
+	for k, v in WCLOptions["exec_%d" % nth]["cmdopts"].items():
 	    cmdlist.append("%s%s" %(["-","--"][doubledash], k))
 	    cmdlist.append(v)
-
-    if WCLOptions["config"].has_key("outlog"):
-         cmdlist.append("> %s 2>&1" % WCLOptions["config"]["outlog"])
 
     return ' '.join(cmdlist)
 
@@ -228,4 +195,9 @@ if __name__ == '__main__':
         WCLOptions = expandWCL(WrapperOptions)
         print "got WCLOptions of", WCLOptions
         print "would build command:" , buildStockCommand(WCLOptions)
+ 
+        print "provenance:"
+        genProvenance(WCLOptions, 1, time.time()) 
+        os.system("cat proto_prov.wcl")
+
     f.close()

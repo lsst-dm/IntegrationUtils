@@ -4,7 +4,7 @@
     filename=decam-sispi-00022719_${ccd:2}.fits
   </split_ccd>
   <biased>
-     filename = ${input.split_ccd.filename:trim}_bias.fits
+     filename = ${files.split_ccd.filename:trim}_bias.fits
   </biased>
 </files>
 <wrapper>
@@ -18,14 +18,14 @@
   cmdflags = overscan,MEF
   <cmdopts>
     output = applibias_out.list
-    bias = /blue-ccd-data/mengel_work/cal/biascor_${input.split_ccd.ccd:2}.fits 
-    photflattens = /blue-ccd-data/mengel_work/cal/photflatcor_${input.split_ccd.ccd:2}.fits 
-    flatten = ${config.caldir}/flatcor_${input.split_ccd.ccd:2}.fits 
-    bpm = ${config.caldir}/bpm_${input.split_ccd.ccd:2}.fits 
-    pupil = ${config.caldir}/pupil_${input.split_ccd.ccd:2}.fits 
+    bias = /blue-ccd-data/mengel_work/cal/biascor_${files.split_ccd.ccd:2}.fits 
+    photflattens = /blue-ccd-data/mengel_work/cal/photflatcor_${files.split_ccd.ccd:2}.fits 
+    flatten = ${wrapper.caldir}/flatcor_${files.split_ccd.ccd:2}.fits 
+    bpm = ${wrapper.caldir}/bpm_${files.split_ccd.ccd:2}.fits 
+    pupil = ${wrapper.caldir}/pupil_${files.split_ccd.ccd:2}.fits 
     variancetype = WEIGHT
     interpolate_col = 2.0
     updatekeyword = SKYBRITE
     verbose = 3 
   </cmdopts>
-</config>
+</exec_1>
