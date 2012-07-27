@@ -1,0 +1,32 @@
+<files>
+  <split_ccd>
+    ccd=1
+    filename=decam-sispi-00022719_${ccd:2}.fits
+  </split_ccd>
+  <biased>
+     filename = ${files.split_ccd.filename:trim}_bias.fits
+  </biased>
+</files>
+<wrapper>
+  caldir = /blue-ccd-data/mengel_work/cal
+</wrapper>
+<exec_1>
+  parents = files.split_ccd
+  children = files.biased
+  execname = imcorrect
+  <cmdline>
+    _01_input = applybias_in.list
+    overscan = _flag
+    MEF = _flag
+    output = applibias_out.list
+    bias = /blue-ccd-data/mengel_work/cal/biascor_${files.split_ccd.ccd:2}.fits 
+    photflattens = /blue-ccd-data/mengel_work/cal/photflatcor_${files.split_ccd.ccd:2}.fits 
+    flatten = ${wrapper.caldir}/flatcor_${files.split_ccd.ccd:2}.fits 
+    bpm = ${wrapper.caldir}/bpm_${files.split_ccd.ccd:2}.fits 
+    pupil = ${wrapper.caldir}/pupil_${files.split_ccd.ccd:2}.fits 
+    variancetype = WEIGHT
+    interpolate_col = 2.0
+    updatekeyword = SKYBRITE
+    verbose = 3 
+  </cmdline>
+</exec_1>
