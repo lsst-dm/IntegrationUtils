@@ -8,9 +8,9 @@ import re
 from collections import OrderedDict
 from WrapperUtils import *
 
-debug = 1
+debug = 0
 
-var_re = re.compile("\${(.*?)}")
+var_re = re.compile("[$]{(.*?)}")
 
 def expandDollarVars(fulldict, temp_dict, configval):
     if debug: print "expanding configval:", configval
@@ -20,7 +20,7 @@ def expandDollarVars(fulldict, temp_dict, configval):
         return expandVar(configval, fulldict, temp_dict)
     
     limit = 100
-    while var_re.search(configval, 1) and limit > 0:
+    while var_re.search(configval) and limit > 0:
         configval = var_re.sub( replfunc, configval ) 
         limit = limit - 1
  
@@ -122,7 +122,7 @@ def expandWCL(wrapopts):
     for k in res.keys():
          recurseExpand(res, res[k])
    
-    expandFileRange(res['files'])
+    expandFileRange(res.get('files',{}))
 
     return res
 
@@ -163,17 +163,33 @@ def buildStockCommand(WCLOptions, nth = 1,  doubledash = 0):
     if not "exec_%d" % nth in WCLOptions:
          return None
 
-    cmdlist = [ WCLOptions["exec_%d" % nth]["command"] ]
+    if WCLOptions["exec_%d" % nth].has_key("command"):
+        print "command field is depcrated! use execname!"
+        cmdlist = [ WCLOptions["exec_%d" % nth]["command"] ]
+    else:
+        cmdlist = [ WCLOptions["exec_%d" % nth]["execname"] ]
  
+    if  WCLOptions["exec_%d" % nth].has_key("cmdline"):
+	for k, v in WCLOptions["exec_%d" % nth]["cmdline"].items():
+
+            if not k.startswith('_'):
+	        cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+
+            if v != "_flag":
+	        cmdlist.append("'%s'" % v)
+
     if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
+        print "cmdargs is now deprecated!"
 	for v in WCLOptions["exec_%d" % nth]["cmdargs"].split(','):
 	    cmdlist.append(v)
 
     if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
+        print "cmdflags is now deprecated!"
 	for v in WCLOptions["exec_%d" % nth]["cmdflags"].split(','):
 	    cmdlist.append("%s%s" % (["-","--"][doubledash], v))
      
     if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
+        print "cmdopts is now deprecated!"
 	for k, v in WCLOptions["exec_%d" % nth]["cmdopts"].items():
 	    cmdlist.append("%s%s" %(["-","--"][doubledash], k))
 	    cmdlist.append(v)
