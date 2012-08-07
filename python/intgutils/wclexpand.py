@@ -7,8 +7,13 @@ import time
 import re
 from collections import OrderedDict
 from WrapperUtils import *
+from WrapperFuncs import *
 
 debug = 0
+
+#
+# - Following are for expanding ${...} type patterns
+#
 
 var_re = re.compile("[$]{(.*?)}")
 
@@ -103,6 +108,113 @@ def expandFileRange(dict):
                     newfilename = range_re.sub(repl, dict[k2]["filename"])
                     dict[k2]["filename"] = newfilename
         
+def recurseExpand(res,cur):
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = expandDollarVars(res, cur, cur[sk])
+	else:
+	    recurseExpand(res,cur[sk])
+
+#
+# - Following are for expanding $HEAD{filename,var1,var2,...} type patterns
+#
+
+dhead_re = re.compile("[$]HEAD{(.*?)}")
+
+def expandDollarHead(configval):
+    if debug: print "expanding configval:", configval
+
+    def replfunc(match):
+        return expandHead(match)
+    
+    limit = 100
+    while dhead_re.search(configval) and limit > 0:
+        configval = dhead_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+dheadv_re = re.compile("([^:\s]+)(:(\d+)){0,1}$")
+
+def expandHead(match):
+    
+    hklst = match.group(1).split(',')
+
+    tmpdct = {}
+    for item in hklst[1:]:
+        patmatch = dheadv_re.match(item)
+	if patmatch:
+	    if patmatch.group(3):
+	        kdu = patmatch.group(3)
+	    else:
+        	kdu = '0'
+        else:
+            print "Incorrect wcl syntax for $HEAD. Exiting."
+    	    exit(1)
+        # Group the keywords to extract according to hdu number
+        if kdu not in tmpdct:
+            tmpdct[kdu]=[] 
+    	tmpdct[kdu].append(patmatch.group(1))
+    
+    fitsfile = hklst[0]
+    hklst=[]
+    hdulist = fits_open(fitsfile,'readonly')
+    for kdu in tmpdct:
+        hdu = int(kdu)
+	for keyword in tmpdct[kdu]: 
+            value = get_header_keyword(hdulist[hdu],keyword)
+            if value != None:
+	        hklst.append(str(value))
+            else:
+                print "Failed to get keyword %s from file %s; Exiting" % (keyword,fitsfile)
+                exit(1)
+    fits_close(hdulist)
+    
+    return ','.join(hklst)
+
+def recurseExpandDollarHead(res,cur):
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = expandDollarHead(cur[sk])
+	else:
+	    recurseExpandDollarHead(res,cur[sk])
+
+#
+# - Following are for expanding $FUNC{funcname,var1,var2,...} type patterns
+#
+
+dfunc_re = re.compile("[$]FUNC{(.*?)}")
+
+def expandDollarFunc(configval):
+    if debug: print "expanding configval:", configval
+
+    def replfunc(match):
+        return expandFunc(match)
+    
+    limit = 100
+    while dfunc_re.search(configval) and limit > 0:
+        configval = dfunc_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+def expandFunc(match):
+    
+    fxargs = match.group(1).split(',')
+    
+    funcname = fxargs[0]
+    fxargs = fxargs[1:]
+    
+    m = sys.modules['WrapperFuncs']
+    func = getattr(m,funcname)
+
+    return str(func(fxargs))
+
+def recurseExpandDollarFunc(res,cur):
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = expandDollarFunc(cur[sk])
+	else:
+	    recurseExpandDollarFunc(res,cur[sk])
+
 def expandWCL(wrapopts):
     res = dict()
     if debug: print "we are in:" , os.getcwd()
@@ -122,16 +234,15 @@ def expandWCL(wrapopts):
     for k in res.keys():
          recurseExpand(res, res[k])
    
-    expandFileRange(res.get('files',{}))
+    expandFileRange(res.get('file',{}))
+
+    for k in res.keys():
+         recurseExpandDollarHead(res, res[k])
+
+    for k in res.keys():
+         recurseExpandDollarFunc(res, res[k])
 
     return res
-
-def recurseExpand(res,cur):
-    for sk in cur:
-	if cur[sk].__class__ == ''.__class__:
-	    cur[sk] = expandDollarVars(res, cur, cur[sk])
-	else:
-	    recurseExpand(res,cur[sk])
 
 def genProvenance(WCLOptions, exitstatus, starttime):
     provenance=OrderedDict()
@@ -148,7 +259,7 @@ def genProvenance(WCLOptions, exitstatus, starttime):
          provenance["exec_%d"%i] = WCLOptions["exec_%d"%i]
          i = i + 1
 
-    for k in ('files', 'parents', 'children'):
+    for k in ('file', 'parents', 'children'):
         provenance[k] = WCLOptions.get(k,{})
     
     prov_file =  "proto_prov.wcl"
@@ -158,44 +269,64 @@ def genProvenance(WCLOptions, exitstatus, starttime):
 	print "Failed to open %s. Exiting." %  prov_file
 	exit(1)
 
-def buildStockCommand(WCLOptions, nth = 1,  doubledash = 0):
+argpos_re = re.compile("^_(\d+)_\S*$")
+
+def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
 
     if not "exec_%d" % nth in WCLOptions:
          return None
 
     if WCLOptions["exec_%d" % nth].has_key("command"):
-        print "command field is depcrated! use execname!"
+        print "command field is deprecrated! use execname!"
         cmdlist = [ WCLOptions["exec_%d" % nth]["command"] ]
     else:
         cmdlist = [ WCLOptions["exec_%d" % nth]["execname"] ]
  
+    # 
+    # If "cmdline" section exists, old style "cmdopts", "cmdargs", and 
+    # "cmdflags" sections will be ignored
+    #
     if  WCLOptions["exec_%d" % nth].has_key("cmdline"):
+
+        tmpdct = {}
+
 	for k, v in WCLOptions["exec_%d" % nth]["cmdline"].items():
 
-            if not k.startswith('_'):
-	        cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+            patmatch = argpos_re.match(k)
+	    if patmatch:
+	        tmpdct[patmatch.group(1)] = v
+            else:
+                if not k.startswith('_'):
+                    if v != "_flag":
+			cmdlist.append("%s%s '%s'" %(["-","--"][doubledash], k, v))
+		    else:
+	                cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+	        else:
+	            cmdlist.append("'%s'" % v)
+	
+        # insert position sensitive arguments into specified location in argument list
+	for k in sorted(tmpdct.iterkeys()):
+	    cmdlist.insert(int(k),"'%s'" % tmpdct[k])
+	
+    else:
+    
+        if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
+            print "cmdargs is now deprecated!"
+	    for v in WCLOptions["exec_%d" % nth]["cmdargs"].split(','):
+	        cmdlist.append(v)
 
-            if v != "_flag":
-	        cmdlist.append("'%s'" % v)
-
-    if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
-        print "cmdargs is now deprecated!"
-	for v in WCLOptions["exec_%d" % nth]["cmdargs"].split(','):
-	    cmdlist.append(v)
-
-    if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
-        print "cmdflags is now deprecated!"
-	for v in WCLOptions["exec_%d" % nth]["cmdflags"].split(','):
-	    cmdlist.append("%s%s" % (["-","--"][doubledash], v))
+        if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
+            print "cmdflags is now deprecated!"
+	    for v in WCLOptions["exec_%d" % nth]["cmdflags"].split(','):
+		cmdlist.append("%s%s" % (["-","--"][doubledash], v))
      
-    if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
-        print "cmdopts is now deprecated!"
-	for k, v in WCLOptions["exec_%d" % nth]["cmdopts"].items():
-	    cmdlist.append("%s%s" %(["-","--"][doubledash], k))
-	    cmdlist.append(v)
+        if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
+            print "cmdopts is now deprecated!"
+	    for k, v in WCLOptions["exec_%d" % nth]["cmdopts"].items():
+	        cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+	        cmdlist.append(v)
 
     return ' '.join(cmdlist)
-
 
 if __name__ == '__main__':
     print "argv: ", sys.argv
