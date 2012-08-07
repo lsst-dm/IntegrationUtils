@@ -17,12 +17,12 @@ debug = 0
 
 var_re = re.compile("[$]{(.*?)}")
 
-def expandDollarVars(fulldict, temp_dict, configval):
+def expandDollarVars(fulldict, temp_dict, configval, loopcheck = {}):
     if debug: print "expanding configval:", configval
     temp_dict1 = {}
 
-    def replfunc(configval, fulldict = fulldict, temp_dict = temp_dict):
-        return expandVar(configval, fulldict, temp_dict)
+    def replfunc(configval, fulldict = fulldict, temp_dict = temp_dict, loopcheck = loopcheck):
+        return expandVar(configval, fulldict, temp_dict, loopcheck)
     
     limit = 100
     while var_re.search(configval) and limit > 0:
@@ -31,7 +31,7 @@ def expandDollarVars(fulldict, temp_dict, configval):
  
     return configval
 
-def expandVar(match, fulldict, temp_dict):
+def expandVar(match, fulldict, temp_dict, loopcheck = {}):
 
     if debug: print "expandvar"
 
@@ -40,6 +40,12 @@ def expandVar(match, fulldict, temp_dict):
     if debug: print "expandvar varname is " , varname
     if debug: print "expandvar fulldict: " , fulldict
     if debug: print "expandvar temp_dict: " ,  temp_dict
+    if debug: print "expandvar loopcheck: " ,  loopcheck
+
+    if varname in loopcheck:
+        raise KeyError("Error: .wcl file definition involves itself", varname)
+
+    loopcheck[varname] = 1
 
     if varname.find(":") > 0:
 	name, func = varname.split(":")
@@ -64,7 +70,7 @@ def expandVar(match, fulldict, temp_dict):
 	    print "undefined section", list[i] ," in ", '.'.join(list)
 	    d = {}
 
-    expanded = expandDollarVars(fulldict, temp_dict,  d)
+    expanded = expandDollarVars(fulldict, temp_dict,  d, loopcheck)
 
     if debug: print "found", expanded
     #
@@ -80,6 +86,8 @@ def expandVar(match, fulldict, temp_dict):
 
     if func == 'trim':
 	expanded =expanded[0:expanded.find('.')]
+
+    del loopcheck[varname]
 
     if debug: print "converted ", varname, " to ", expanded 
 
