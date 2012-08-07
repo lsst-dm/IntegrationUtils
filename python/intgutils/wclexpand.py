@@ -62,7 +62,7 @@ def expandVar(match, fulldict, temp_dict):
 	    print "undefined section in ", '.'.join(list)
 	    d = {}
 
-    expanded = d
+    expanded = expandDollarVars(dict, fulldict, d)
 
     if debug: print "found", expanded
     #
@@ -100,7 +100,7 @@ def expandFileRange(dict):
 	   if m:
 	       template = dict[k]
                del dict[k]
-               for i in range(int(m.group(1)), int(m.group(2))):
+               for i in range(int(m.group(1)), int(m.group(2))+1):
                     k2 = "%s_%d" % (k, i)
                     repl=replfmt % i
                     dict[k2] = {}
