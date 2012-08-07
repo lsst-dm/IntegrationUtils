@@ -2,3 +2,4 @@
 --config xtalk_unified.wcl
 --config im_unified.wcl.new
 --config xtalk_unified.wcl.new
+--config test_trim.wcl

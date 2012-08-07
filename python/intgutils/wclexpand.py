@@ -38,6 +38,8 @@ def expandVar(match, fulldict, temp_dict):
     varname = match.group(1)
 
     if debug: print "expandvar varname is " , varname
+    if debug: print "expandvar fulldict: " , fulldict
+    if debug: print "expandvar temp_dict: " ,  temp_dict
 
     if varname.find(":") > 0:
 	name, func = varname.split(":")
@@ -59,10 +61,10 @@ def expandVar(match, fulldict, temp_dict):
 	try:
 	    d = d[list[i]]
 	except:
-	    print "undefined section in ", '.'.join(list)
+	    print "undefined section", list[i] ," in ", '.'.join(list)
 	    d = {}
 
-    expanded = expandDollarVars(dict, fulldict, d)
+    expanded = expandDollarVars(fulldict, temp_dict,  d)
 
     if debug: print "found", expanded
     #
@@ -329,6 +331,7 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
     return ' '.join(cmdlist)
 
 if __name__ == '__main__':
+    debug = 1
     print "argv: ", sys.argv
     os.chdir('test')
     f = open('testlist', 'r')
