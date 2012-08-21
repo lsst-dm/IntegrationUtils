@@ -93,13 +93,25 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
 
     return expanded
      
-range_re = re.compile("\(([0-9]+)-([0-9]+)\)(:[0-9]+)?")
+range_re = re.compile("\(([0-9]+)([-,0-9]+)\)(:[0-9]+)?")
+
+def expandrange(s):
+    res = []
+    for p in s.split(','):
+        l = p.split('-')
+        if len(l) == 2:
+            for i in  range(int(l[0]),int(l[1])+1):
+                res.append(i)   
+        else:
+            res.append(int(l[0]))
+    return res
 
 def expandFileRange(dict):
 
     for k in dict.keys():
        if dict[k].has_key("filename"):
            filename = dict[k]["filename"]
+
            m = range_re.search(filename)
 
            if m and m.group(3):
@@ -110,7 +122,7 @@ def expandFileRange(dict):
 	   if m:
 	       template = dict[k]
                del dict[k]
-               for i in range(int(m.group(1)), int(m.group(2))+1):
+               for i in expandrange(m.group(1)+m.group(2)):
                     k2 = "%s_%d" % (k, i)
                     repl=replfmt % i
                     dict[k2] = {}
