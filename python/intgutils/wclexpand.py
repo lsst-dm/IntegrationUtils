@@ -62,15 +62,16 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
     else:
 	list = [name]
 	d = temp_dict
-
+    
     for i in range(0,len(list)):
 	try:
+            lastd = d        # keep containing dict for relative names
 	    d = d[list[i]]
 	except:
 	    print "undefined section", list[i] ," in ", '.'.join(list)
 	    d = {}
 
-    expanded = expandDollarVars(fulldict, temp_dict,  d, loopcheck)
+    expanded = expandDollarVars(fulldict, lastd,  d, loopcheck)
 
     if debug: print "found", expanded
     #
@@ -134,7 +135,7 @@ def recurseExpand(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarVars(res, cur, cur[sk])
-	else:
+	elif not sk.startswith("template"):
 	    recurseExpand(res,cur[sk])
 
 #
@@ -197,7 +198,7 @@ def recurseExpandDollarHead(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarHead(cur[sk])
-	else:
+	elif not sk.startswith("template"):
 	    recurseExpandDollarHead(res,cur[sk])
 
 #
@@ -234,7 +235,7 @@ def recurseExpandDollarFunc(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarFunc(cur[sk])
-	else:
+	elif not sk.startswith("template"):
 	    recurseExpandDollarFunc(res,cur[sk])
 
 def expandWCL(wrapopts):
