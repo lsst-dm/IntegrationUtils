@@ -62,16 +62,15 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
     else:
 	list = [name]
 	d = temp_dict
-    
+
     for i in range(0,len(list)):
 	try:
-            lastd = d        # keep containing dict for relative names
 	    d = d[list[i]]
 	except:
 	    print "undefined section", list[i] ," in ", '.'.join(list)
 	    d = {}
 
-    expanded = expandDollarVars(fulldict, lastd,  d, loopcheck)
+    expanded = expandDollarVars(fulldict, temp_dict,  d, loopcheck)
 
     if debug: print "found", expanded
     #
@@ -121,21 +120,18 @@ def expandFileRange(dict):
               replfmt = "%d"
 
 	   if m:
-	       template = dict[k]
-               del dict[k]
+	       l = []
                for i in expandrange(m.group(1)+m.group(2)):
-                    k2 = "%s_%d" % (k, i)
                     repl=replfmt % i
-                    dict[k2] = {}
-                    dict[k2].update(template)
-                    newfilename = range_re.sub(repl, dict[k2]["filename"])
-                    dict[k2]["filename"] = newfilename
+                    newfilename = range_re.sub(repl, dict[k]["filename"])
+                    l.append(newfilename)
+               dict[k]["filename"]=','.join(l)
         
 def recurseExpand(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarVars(res, cur, cur[sk])
-	elif not sk.startswith("template"):
+	else:
 	    recurseExpand(res,cur[sk])
 
 #
@@ -198,7 +194,7 @@ def recurseExpandDollarHead(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarHead(cur[sk])
-	elif not sk.startswith("template"):
+	else:
 	    recurseExpandDollarHead(res,cur[sk])
 
 #
@@ -235,8 +231,58 @@ def recurseExpandDollarFunc(res,cur):
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarFunc(cur[sk])
-	elif not sk.startswith("template"):
+	else:
 	    recurseExpandDollarFunc(res,cur[sk])
+
+#
+# - This will replace a pattern of type $lpXX{KEYWORD} with the value 
+#   corresponding to key='KEYWORD' in the user-supplied dictionary "rd":
+#
+#     $lpXX{KEYWORD} ==>> rd['KEYWORD']
+#
+dkey_re = re.compile("[$]lpXX{(.*?)}")
+
+def replaceDollarKey(configval,rd):
+    if debug: print "replacing configval:", configval
+
+    def replfunc(match,rd=rd):
+        return rd[match.group(1)]
+    
+    limit = 100
+    while dkey_re.search(configval) and limit > 0:
+        configval = dkey_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+def recurseReplaceDollarKey(res,cur,rd):
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = replaceDollarKey(cur[sk],rd)
+	else:
+	    recurseReplaceDollarKey(res,cur[sk],rd)
+
+def replaceRange(configval):
+    if debug: print "replacing configval:", configval
+
+    def replfunc(match):
+        if match.group(3):
+            replfmt = "%%%sd" % match.group(3)[1:]
+        else:
+            replfmt = "%d"
+        return ','.join([replfmt % item for item in expandrange(match.group(1)+match.group(2))])
+
+    limit = 100
+    while range_re.search(configval) and limit > 0:
+        configval = range_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+def recurseReplaceRange(res,cur):
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = replaceRange(cur[sk])
+	else:
+	    recurseReplaceRange(res,cur[sk])
 
 def expandWCL(wrapopts):
     res = dict()
