@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 
+"""
+Utilities for expanding $func{whatever} type syntax
+in wcl files. 
+
+Usual Usage:
+        from wclexpand.py import expandWCL
+        from WrapperUtils import WrapperOptionParser
+
+        p = WrapperOptionParser()
+        WrapperOptions = p.parse()
+        WCLOptions = expandWCL(WrapperOptions)
+
+However direct usage of the various internal routines
+is sometimes appropriate.
+"""
 import os
 import  sys
 import wclutils
@@ -18,10 +33,22 @@ debug = 0
 var_re = re.compile("[$]{(.*?)}")
 
 def expandDollarVars(fulldict, temp_dict, configval, loopcheck = {}):
+    """
+    Replace ${variable} or ${sect.subsect.variable} with values in dict
+
+    Arguments are:
+    * fulldict -- whole dictionary for looking up full path (sect.subsect...)
+        values
+    * temp_dict -- subditionary for local paths
+    * configval -- value from configuration in which do do the expansion
+    * loopcheck -- list of variables we're currently expanding to avoid
+        infinite recursion
+    """
     if debug: print "expanding configval:", configval
     temp_dict1 = {}
 
     def replfunc(configval, fulldict = fulldict, temp_dict = temp_dict, loopcheck = loopcheck):
+        """ temporary local function to pass into re.sub() -- defines default parameters """
         return expandVar(configval, fulldict, temp_dict, loopcheck)
     
     limit = 100
@@ -32,6 +59,24 @@ def expandDollarVars(fulldict, temp_dict, configval, loopcheck = {}):
     return configval
 
 def expandVar(match, fulldict, temp_dict, loopcheck = {}):
+    """
+        replace a variable with its value, given a regexp match
+
+        also handles functions on the end like :2 for 2 column
+        padded, and :trim for filename suffix trimming.  These
+        functions should later be in a table(!)
+
+        >>> fulldict = {'a': {'b':'c', 'd': 'e', 'foo':'data'}}
+        >>> m = re.search('\${(.*?)}', "this is ${foo} stuff")
+        >>> expandVar(m, fulldict, fulldict['a'])
+	'data'
+	>>> m = re.search('\${(.*?)}', "this is ${a.foo} stuff")
+	>>> expandVar(m, fulldict, fulldict['a'])
+	'data'
+	>>> m = re.search('\${(.*?)}', "this is ${a.b} stuff")
+	>>> expandVar(m, fulldict, fulldict['a'])
+	'c'
+    """
 
     if debug: print "expandvar"
 
@@ -96,6 +141,12 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
 range_re = re.compile("\(([0-9]+)([-,0-9]+)\)(:[0-9]+)?")
 
 def expandrange(s):
+    """
+    convert ranges like "1-10,20-15" into python list of integers
+
+    >>> expandrange("1-10,20-15")
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    """
     res = []
     for p in s.split(','):
         l = p.split('-')
@@ -107,6 +158,15 @@ def expandrange(s):
     return res
 
 def expandFileRange(dict):
+    """
+    given a wcl dict with filename entries with embedded ranges, yeild 
+    a wcl dict with multiple file elements with each range element expanded 
+
+    >>> d = { "file": { "filename": "apple(1-10):3.xyz", "type": "foo"}}
+    >>> expandFileRange(d)
+    >>> d
+    {'file_9': {'type': 'foo', 'filename': 'apple  9.xyz'}, 'file_8': {'type': 'foo', 'filename': 'apple  8.xyz'}, 'file_5': {'type': 'foo', 'filename': 'apple  5.xyz'}, 'file_4': {'type': 'foo', 'filename': 'apple  4.xyz'}, 'file_7': {'type': 'foo', 'filename': 'apple  7.xyz'}, 'file_6': {'type': 'foo', 'filename': 'apple  6.xyz'}, 'file_1': {'type': 'foo', 'filename': 'apple  1.xyz'}, 'file_3': {'type': 'foo', 'filename': 'apple  3.xyz'}, 'file_2': {'type': 'foo', 'filename': 'apple  2.xyz'}, 'file_10': {'type': 'foo', 'filename': 'apple 10.xyz'}}
+    """
 
     for k in dict.keys():
        if dict[k].has_key("filename"):
@@ -128,6 +188,9 @@ def expandFileRange(dict):
                dict[k]["filename"]=','.join(l)
         
 def recurseExpand(res,cur):
+    """
+        Recursivley expand variables in strings in a wcl dictionary
+    """
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarVars(res, cur, cur[sk])
@@ -141,6 +204,9 @@ def recurseExpand(res,cur):
 dhead_re = re.compile("[$]HEAD{(.*?)}")
 
 def expandDollarHead(configval):
+    """
+    Replace $HEAD{xxx} with the approprate header variable
+    """
     if debug: print "expanding configval:", configval
 
     def replfunc(match):
@@ -155,6 +221,9 @@ def expandDollarHead(configval):
 dheadv_re = re.compile("([^:\s]+)(:(\d+)){0,1}$")
 
 def expandHead(match):
+    """
+    given a match object, return the headers involved
+    """
     
     hklst = match.group(1).split(',')
 
@@ -191,6 +260,9 @@ def expandHead(match):
     return ','.join(hklst)
 
 def recurseExpandDollarHead(res,cur):
+    """
+        recursivley walk a wcl dictionary, doing $HEAD{..} expansion
+    """
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarHead(cur[sk])
@@ -204,6 +276,9 @@ def recurseExpandDollarHead(res,cur):
 dfunc_re = re.compile("[$]FUNC{(.*?)}")
 
 def expandDollarFunc(configval):
+    """
+        expand $FUNC{whatever} in text
+    """
     if debug: print "expanding configval:", configval
 
     def replfunc(match):
@@ -216,6 +291,9 @@ def expandDollarFunc(configval):
     return configval
 
 def expandFunc(match):
+    """
+    Given ap atch object, get the corsponding functino value
+    """
     
     fxargs = match.group(1).split(',')
     
@@ -228,6 +306,9 @@ def expandFunc(match):
     return str(func(fxargs))
 
 def recurseExpandDollarFunc(res,cur):
+    """
+    recursively apply expansion of  $FUNC{whatever}
+    """
     for sk in cur:
 	if cur[sk].__class__ == ''.__class__:
 	    cur[sk] = expandDollarFunc(cur[sk])
@@ -285,6 +366,11 @@ def recurseReplaceRange(res,cur):
 	    recurseReplaceRange(res,cur[sk])
 
 def expandWCL(wrapopts):
+    """
+       Expand variable, header, and function references from wcl files 
+       mentioned in the passed-in wrapper options.
+    """
+
     res = dict()
     if debug: print "we are in:" , os.getcwd()
     for wcltype in ["config", "input", "output", "ancilliary"]:
@@ -314,6 +400,11 @@ def expandWCL(wrapopts):
     return res
 
 def genProvenance(WCLOptions, exitstatus, starttime):
+    """
+       Generate a proveneance file by manufacturing a wcl dictionary
+       with subdictionaries from the input, etc. and dumping it 
+       to a file.
+    """
     provenance=OrderedDict()
 
     cmdlineargs = ''
@@ -341,6 +432,10 @@ def genProvenance(WCLOptions, exitstatus, starttime):
 argpos_re = re.compile("^_(\d+)_\S*$")
 
 def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
+
+    """
+        Build a command line from an expanded wcl options file
+    """
 
     if not "exec_%d" % nth in WCLOptions:
          return None
