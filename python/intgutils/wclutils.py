@@ -107,7 +107,7 @@ def read_wcl(in_file=None):
             pat_key_val = "^\s*(\S+)(\s*=\s*)(.+)\s*$"
             pat_match = re.search(pat_key_val, line)
             if pat_match is not None:
-                key = pat_match.group(1).lower()
+                key = pat_match.group(1)
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
                 continue
@@ -115,7 +115,7 @@ def read_wcl(in_file=None):
             pat_key_val = "^\s*(\S+)(\s+)([^=].+)\s*$"
             pat_match = re.search(pat_key_val, line)
             if pat_match is not None:
-                key = pat_match.group(1).lower()
+                key = pat_match.group(1)
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
                 continue
@@ -148,8 +148,8 @@ def _run_test():
         test_wcl_file = open(test_fname, "r")
     test_wcl_dict = read_wcl(test_wcl_file)
     test_wcl_file.close()
-#    write_wcl(test_wcl_dict, sys.stdout, False, 4)
-    write_wcl(test_wcl_dict, sys.stdout, True, 4)
+    write_wcl(test_wcl_dict, sys.stdout, False, 4)
+#    write_wcl(test_wcl_dict, sys.stdout, True, 4)
 
 if __name__ ==  "__main__":
     _run_test()
