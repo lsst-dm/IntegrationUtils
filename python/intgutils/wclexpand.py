@@ -66,15 +66,17 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
         padded, and :trim for filename suffix trimming.  These
         functions should later be in a table(!)
 
-        >>> fulldict = {'a': {'b':'c', 'd': 'e', 'foo':'data'}}
-        >>> m = re.search('\${(.*?)}', "this is ${foo} stuff")
-        >>> expandVar(m, fulldict, fulldict['a'])
+        >>> fulldict = {'a': {'b':'c', 'd': 'e', 'foo':'data'}}; \
+            m = re.search('\${(.*?)}', "this is ${foo} stuff"); \
+            expandVar(m, fulldict, fulldict['a'])
 	'data'
-	>>> m = re.search('\${(.*?)}', "this is ${a.foo} stuff")
-	>>> expandVar(m, fulldict, fulldict['a'])
+        >>> fulldict = {'a': {'b':'c', 'd': 'e', 'foo':'data'}};  \
+	    m = re.search('\${(.*?)}', "this is ${a.foo} stuff"); \
+	    expandVar(m, fulldict, fulldict['a'])
 	'data'
-	>>> m = re.search('\${(.*?)}', "this is ${a.b} stuff")
-	>>> expandVar(m, fulldict, fulldict['a'])
+        >>> fulldict = {'a': {'b':'c', 'd': 'e', 'foo':'data'}}; \
+	     m = re.search('\${(.*?)}', "this is ${a.b} stuff"); \
+	     expandVar(m, fulldict, fulldict['a'])
 	'c'
     """
 
@@ -106,7 +108,10 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
 	d = fulldict
     else:
 	list = [name]
-	d = temp_dict
+        if temp_dict.has_key(name):
+	   d = temp_dict
+        else:
+           d = fulldict
 
     for i in range(0,len(list)):
 	try:
@@ -162,10 +167,10 @@ def expandFileRange(dict):
     given a wcl dict with filename entries with embedded ranges, yeild 
     a wcl dict with multiple file elements with each range element expanded 
 
-    >>> d = { "file": { "filename": "apple(1-10):3.xyz", "type": "foo"}}
-    >>> expandFileRange(d)
-    >>> d
-    {'file_9': {'type': 'foo', 'filename': 'apple  9.xyz'}, 'file_8': {'type': 'foo', 'filename': 'apple  8.xyz'}, 'file_5': {'type': 'foo', 'filename': 'apple  5.xyz'}, 'file_4': {'type': 'foo', 'filename': 'apple  4.xyz'}, 'file_7': {'type': 'foo', 'filename': 'apple  7.xyz'}, 'file_6': {'type': 'foo', 'filename': 'apple  6.xyz'}, 'file_1': {'type': 'foo', 'filename': 'apple  1.xyz'}, 'file_3': {'type': 'foo', 'filename': 'apple  3.xyz'}, 'file_2': {'type': 'foo', 'filename': 'apple  2.xyz'}, 'file_10': {'type': 'foo', 'filename': 'apple 10.xyz'}}
+    >>> d = { "file": { "filename": "apple(1-10):3.xyz", "type": "foo"}}; \
+        expandFileRange(d); \
+        d
+    {'file': {'type': 'foo', 'filename': 'apple001.xyz,apple002.xyz,apple003.xyz,apple004.xyz,apple005.xyz,apple006.xyz,apple007.xyz,apple008.xyz,apple009.xyz,apple010.xyz'}}
     """
 
     for k in dict.keys():
@@ -175,7 +180,7 @@ def expandFileRange(dict):
            m = range_re.search(filename)
 
            if m and m.group(3):
-              replfmt = "%%%sd" % m.group(3)[1:]
+              replfmt = "%%0%sd" % m.group(3)[1:]
            else:
               replfmt = "%d"
 
