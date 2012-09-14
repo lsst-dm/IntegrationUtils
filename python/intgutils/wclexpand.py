@@ -31,6 +31,7 @@ debug = 0
 #
 
 var_re = re.compile("[$]{(.*?)}")
+comma_re = re.compile("\s*,\s*")
 
 def expandDollarVars(fulldict, temp_dict, configval, loopcheck = {}):
     """
@@ -297,7 +298,7 @@ def expandDollarFunc(configval):
 
 def expandFunc(match):
     """
-    Given ap atch object, get the corsponding functino value
+    Given ap match object, get the corresponding function value
     """
     
     fxargs = match.group(1).split(',')
@@ -481,12 +482,12 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
     
         if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
             print "cmdargs is now deprecated!"
-	    for v in WCLOptions["exec_%d" % nth]["cmdargs"].split(','):
+	    for v in comma_re.split(WCLOptions["exec_%d" % nth]["cmdargs"]):
 	        cmdlist.append(v)
 
         if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
             print "cmdflags is now deprecated!"
-	    for v in WCLOptions["exec_%d" % nth]["cmdflags"].split(','):
+	    for v in comma_re.split(WCLOptions["exec_%d" % nth]["cmdflags"]):
 		cmdlist.append("%s%s" % (["-","--"][doubledash], v))
      
         if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
