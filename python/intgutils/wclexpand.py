@@ -392,16 +392,13 @@ def expandWCL(wrapopts):
 	    # exit(1)
     if debug: print res
 
-    for k in res.keys():
-         recurseExpand(res, res[k])
+    recurseExpand(res, res)
    
     expandFileRange(res.get('file',{}))
 
-    for k in res.keys():
-         recurseExpandDollarHead(res, res[k])
+    recurseExpandDollarHead(res, res)
 
-    for k in res.keys():
-         recurseExpandDollarFunc(res, res[k])
+    recurseExpandDollarFunc(res, res)
 
     return res
 
