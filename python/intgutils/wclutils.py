@@ -48,7 +48,7 @@ def _recurs_write_wcl(wcl_dict, out_file, sortit, inc_indent, curr_indent):
                         " = " + str(value)
 
 
-def read_wcl(in_file=None):
+def read_wcl(in_file=None, cmdline=False):
     """Reads WCL text from an open file object and returns a dictionary"""
     wcl_dict = OrderedDict()
     curr = wcl_dict
@@ -66,7 +66,7 @@ def read_wcl(in_file=None):
             patmatch = re.search("<<include (\S+)>>", line)
             if patmatch is not None:
                 wcl_file2 = open(patmatch.group(1))
-                wcl_dict2 = read_wcl(wcl_file2)
+                wcl_dict2 = read_wcl(wcl_file2, cmdline)
                 wcl_file2.close()
                 wcl_dict.update(wcl_dict2)
                 line = in_file.readline()
@@ -76,6 +76,8 @@ def read_wcl(in_file=None):
             pat_match = re.search("^\s*</\s*(\S+)\s*>\s*$", line)
             if pat_match is not None:
                 key = pat_match.group(1).lower()
+                if key == 'cmdline':
+                    cmdline = False
                 stack.pop()
                 curr = stack[len(stack)-1]
                 while not key in curr: 
@@ -94,6 +96,9 @@ def read_wcl(in_file=None):
                 stack.append(curr[key])
                 curr = curr[key]
     
+                if key == 'cmdline':
+                    cmdline = True
+
                 if pat_match.group(2) is not None:
                     val = pat_match.group(2).lower()
                     if not val in curr: 
@@ -108,6 +113,8 @@ def read_wcl(in_file=None):
             pat_match = re.search(pat_key_val, line)
             if pat_match is not None:
                 key = pat_match.group(1)
+                if not cmdline:
+                    key = key.lower()
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
                 continue
@@ -116,6 +123,8 @@ def read_wcl(in_file=None):
             pat_match = re.search(pat_key_val, line)
             if pat_match is not None:
                 key = pat_match.group(1)
+                if not cmdline:
+                    key = key.lower()
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
                 continue
