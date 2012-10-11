@@ -76,7 +76,7 @@ def read_wcl(in_file=None, cmdline=False):
             pat_match = re.search("^\s*</\s*(\S+)\s*>\s*$", line)
             if pat_match is not None:
                 key = pat_match.group(1).lower()
-                if key == 'cmdline':
+                if key == 'cmdline' or key == 'replace':
                     cmdline = False
                 stack.pop()
                 curr = stack[len(stack)-1]
@@ -96,7 +96,7 @@ def read_wcl(in_file=None, cmdline=False):
                 stack.append(curr[key])
                 curr = curr[key]
     
-                if key == 'cmdline':
+                if key == 'cmdline' or key == 'replace':
                     cmdline = True
 
                 if pat_match.group(2) is not None:
