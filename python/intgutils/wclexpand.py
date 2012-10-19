@@ -322,6 +322,91 @@ def recurseExpandDollarFunc(res,cur):
 	    recurseExpandDollarFunc(res,cur[sk])
 
 #
+# - Following are for expanding $LSTCOL{listname,var1,var2,...} type patterns
+#
+
+dlstcol_re = re.compile("[$]LSTCOL{(.*?)}")
+
+def expandDollarLstCol(fulldict, configval):
+    """
+        expand $LSTCOL{whatever} in text
+    """
+    if debug: print "expanding configval:", configval
+
+    def replfunc(match,fulldict=fulldict):
+        return expandLstCol(match,fulldict)
+    
+    limit = 100
+    while dlstcol_re.search(configval) and limit > 0:
+        configval = dlstcol_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+def expandLstCol(match,fulldict):
+    """
+    Given a match object, get the corresponding column entry from the listfile
+    """
+    
+    lstargs = match.group(1).split(',')
+    
+    listname = lstargs[0]
+    lineno = int(lstargs[1])
+    lstargs = lstargs[2:]
+
+    try:
+        f = open(listname)
+        lines = f.readlines()
+        line = lines[lineno]
+	f.close()
+    except:
+        print "Failed to open %s. Exiting." %  listname
+        exit(1)
+   
+    foundvars = False
+    varsel = []
+    varall = line[:-1].split()
+    for key in fulldict['list']:
+    	if 'listname' in fulldict['list'][key]:
+    	    if fulldict['list'][key]['listname']==listname:
+    		if 'columns' in fulldict['list'][key]:	    
+    		    clmlst = fulldict['list'][key]['columns'].split(',')
+    		    for itemc in lstargs:
+		        if itemc.find(":")>0:
+			    item, func = itemc.split(":")
+			else:
+			    item = itemc
+			    func = "none"
+    			if item in clmlst:
+    			    icol = clmlst.index(item)
+			    v = varall[icol]
+			    if func == 'trim':
+			        v = v[v.rfind('/')+1:v.find('.')]
+    			    varsel.append(v)
+    			else:
+    			    print "%s not found in column list. Exiting." %  item
+    			    exit(1)
+                    foundvars = True
+		    break
+		else:
+		    print "Did not find columns keyword. Exiting."
+		    exit(1)
+    if foundvars:
+        return ','.join(varsel)
+    else:
+     	print "Failed to find listfile column variables." 
+       
+
+def recurseExpandDollarLstCol(res,cur):
+    """
+    recursively apply expansion of  $FUNC{whatever}
+    """
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = expandDollarLstCol(res,cur[sk])
+	else:
+	    recurseExpandDollarLstCol(res,cur[sk])
+
+#
 # - This will replace a pattern of type $lpXX{KEYWORD} with the value 
 #   corresponding to key='KEYWORD' in the user-supplied dictionary "rd":
 #
@@ -399,6 +484,8 @@ def expandWCL(wrapopts):
     recurseExpandDollarHead(res, res)
 
     recurseExpandDollarFunc(res, res)
+
+    recurseExpandDollarLstCol(res, res)
 
     return res
 
