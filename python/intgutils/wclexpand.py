@@ -16,7 +16,7 @@ However direct usage of the various internal routines
 is sometimes appropriate.
 """
 import os
-import  sys
+import sys
 import wclutils
 import time
 import re
@@ -463,7 +463,9 @@ def expandWCL(wrapopts):
     """
 
     res = dict()
+    
     if debug: print "we are in:" , os.getcwd()
+    if debug: print "wrapopts are:" , wrapopts
     for wcltype in ["config", "input", "output", "ancilliary"]:
         try:
 	    if wcltype in wrapopts and wrapopts[wcltype]:
@@ -475,7 +477,24 @@ def expandWCL(wrapopts):
 	    # print "Failed to open '%s'. Exiting." %  wrapopts[wcltype]
 	    # generate_provenance_on_exit(prov_file,starttime=starttime,exit_status=1)
 	    # exit(1)
-    if debug: print res
+    if debug: print "before override:", res
+
+    #
+    # handle override arguments
+    #
+    overrides = wrapopts.get('overrides',[])
+    if debug: print "overrides are:" , overrides
+    for override in overrides:
+        arg,val = override.split('=',2)
+        if debug: print "overriding %s to %s", arg, val
+        path=arg.split('.')
+        if debug: print "path: ", path
+        d = res
+        for c in path[:-1]:
+           d = d[c]
+        d[path[-1]] = val
+
+    if debug: print "after override:", res
 
     recurseExpand(res, res)
    
