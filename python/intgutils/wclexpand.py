@@ -17,12 +17,12 @@ is sometimes appropriate.
 """
 import os
 import sys
-import wclutils
+from  intgutils import wclutils
 import time
 import re
 from collections import OrderedDict
-from WrapperUtils import *
-from WrapperFuncs import *
+from wrappers.WrapperUtils import *
+from wrappers.WrapperFuncs import *
 
 debug = 0
 
@@ -306,7 +306,7 @@ def expandFunc(match):
     funcname = fxargs[0]
     fxargs = fxargs[1:]
     
-    m = sys.modules['WrapperFuncs']
+    m = sys.modules['wrappers.WrapperFuncs']
     func = getattr(m,funcname)
 
     return str(func(fxargs))
