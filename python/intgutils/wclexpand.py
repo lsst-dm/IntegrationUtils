@@ -500,11 +500,11 @@ def expandWCL(wrapopts):
    
     expandFileRange(res.get('file',{}))
 
+    recurseExpandDollarLstCol(res, res)
+
     recurseExpandDollarHead(res, res)
 
     recurseExpandDollarFunc(res, res)
-
-    recurseExpandDollarLstCol(res, res)
 
     return res
 
