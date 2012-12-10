@@ -16,6 +16,7 @@ Contains utilities for use with the Workflow Control Language
 import sys
 import re
 from collections import OrderedDict
+from collections import Mapping
 
 def write_wcl(wcl_dict, out_file=None, sortit=False, indent=4):
     """Outputs a given dictionary in WCL format where items within 
@@ -68,7 +69,7 @@ def read_wcl(in_file=None, cmdline=False):
                 wcl_file2 = open(patmatch.group(1))
                 wcl_dict2 = read_wcl(wcl_file2, cmdline)
                 wcl_file2.close()
-                wcl_dict.update(wcl_dict2)
+                updateDict(wcl_dict, wcl_dict2)
                 line = in_file.readline()
                 continue
     
@@ -119,7 +120,7 @@ def read_wcl(in_file=None, cmdline=False):
                 line = in_file.readline()
                 continue
 
-            pat_key_val = "^\s*(\S+)(\s+)([^=].+)\s*$"
+            pat_key_val = "^\s*(\S+)(\s+)([^=].*)\s*$"
             pat_match = re.search(pat_key_val, line)
             if pat_match is not None:
                 key = pat_match.group(1)
@@ -141,6 +142,16 @@ def read_wcl(in_file=None, cmdline=False):
                 have closing line.")
 
     return wcl_dict
+
+def updateDict(d, u):
+    """ update dictionary recursively to update nested dictionaries """
+    for k, v in u.iteritems():
+        if isinstance(v, Mapping):
+            r = updateDict(d.get(k, {}), v)
+            d[k] = r
+        else:
+            d[k] = u[k]
+    return d
     
 
 ############################################################

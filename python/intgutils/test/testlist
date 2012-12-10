@@ -1,3 +1,4 @@
+--override files.split_ccd.foo=3 --config test_trim.wcl 
 --config im_unified.wcl
 --config xtalk_unified.wcl
 --config im_unified.wcl.new
