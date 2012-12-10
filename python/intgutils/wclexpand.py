@@ -463,6 +463,8 @@ def expandWCL(wrapopts):
     """
 
     res = dict()
+
+    foundconfig = False
     
     if debug: print "we are in:" , os.getcwd()
     if debug: print "wrapopts are:" , wrapopts
@@ -470,13 +472,19 @@ def expandWCL(wrapopts):
         try:
 	    if wcltype in wrapopts and wrapopts[wcltype]:
 		fwcl = open(wrapopts[wcltype],"r")
-		res.update(wclutils.read_wcl(fwcl))
+		#res.update(wclutils.read_wcl(fwcl))
+		res = wclutils.updateDict(res, wclutils.read_wcl(fwcl))
 		fwcl.close()
+                foundconfig = True
 	except:
             raise
 	    # print "Failed to open '%s'. Exiting." %  wrapopts[wcltype]
 	    # generate_provenance_on_exit(prov_file,starttime=starttime,exit_status=1)
 	    # exit(1)
+
+    if not foundconfig:
+        raise Exception("At least one config file option (--config, --input, --output, or --ancillary) must be specified")
+
     if debug: print "before override:", res
 
     #

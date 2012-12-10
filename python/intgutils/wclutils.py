@@ -147,7 +147,7 @@ def updateDict(d, u):
     """ update dictionary recursively to update nested dictionaries """
     for k, v in u.iteritems():
         if isinstance(v, Mapping):
-            r = updateDict(d.get(k, {}), v)
+            r = updateDict(d.get(k, OrderedDict()), v)
             d[k] = r
         else:
             d[k] = u[k]
