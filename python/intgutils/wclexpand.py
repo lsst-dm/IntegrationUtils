@@ -356,41 +356,65 @@ def expandLstCol(match,fulldict):
     try:
         f = open(listname)
         lines = f.readlines()
-        line = lines[lineno]
 	f.close()
     except:
         print "Failed to open %s. Exiting." %  listname
         exit(1)
    
-    foundvars = False
     varsel = []
-    varall = line[:-1].split()
     for key in fulldict['list']:
     	if 'listname' in fulldict['list'][key]:
     	    if fulldict['list'][key]['listname']==listname:
-    		if 'columns' in fulldict['list'][key]:	    
+    		if 'columns' in fulldict['list'][key]:  	
     		    clmlst = fulldict['list'][key]['columns'].split(',')
-    		    for itemc in lstargs:
-		        if itemc.find(":")>0:
-			    item, func = itemc.split(":")
-			else:
-			    item = itemc
-			    func = "none"
+                    if lineno >=0: 
+                        line = lines[lineno]
+                        varall = line[:-1].split()
+    		        for itemc in lstargs:
+    			    if itemc.find(":")>0:
+    			        item, func = itemc.split(":")
+    			    else:
+    			        item = itemc
+    			        func = "none"
+    			    if item in clmlst:
+    			        icol = clmlst.index(item)
+    			        v = varall[icol]
+    			        if func == 'trim':
+    				    v = v[v.rfind('/')+1:v.find('.')]
+    			        varsel.append(v)
+    			    else:
+    			        print "%s not found in column list. Exiting." %  item
+    			        exit(1)
+                    else:
+                        if len(lstargs) != 1:
+                            print "Can only specify one column when reading entire column"
+                            exit(1)
+			itemc = lstargs[0]
+    			if itemc.find(":")>0:
+    			    item, func = itemc.split(":")
+    			else:
+    			    item = itemc
+    			    func = "none"
     			if item in clmlst:
     			    icol = clmlst.index(item)
-			    v = varall[icol]
-			    if func == 'trim':
-			        v = v[v.rfind('/')+1:v.find('.')]
-    			    varsel.append(v)
+                            # now loop over the lines
+			    lno = 0
+			    while lno < len(lines):
+			        varall = lines[lno][:-1].split()
+    			        v = varall[icol]
+    			        if func == 'trim':
+    			    	    v = v[v.rfind('/')+1:v.find('.')]
+    			        varsel.append(v)
+				lno += 1
     			else:
     			    print "%s not found in column list. Exiting." %  item
     			    exit(1)
-                    foundvars = True
-		    break
-		else:
-		    print "Did not find columns keyword. Exiting."
-		    exit(1)
-    if foundvars:
+    		    break
+    		else:
+    		    print "Did not find columns keyword. Exiting."
+    		    exit(1)
+
+    if len(varsel) > 0:
         return ','.join(varsel)
     else:
      	print "Failed to find listfile column variables." 
