@@ -322,6 +322,53 @@ def recurseExpandDollarFunc(res,cur):
 	    recurseExpandDollarFunc(res,cur[sk])
 
 #
+# - Following are for expanding $RNMLST{prefix,file1,file2,...} type patterns
+#
+
+drnmlst_re = re.compile("[$]RNMLST{(.*?)}")
+
+def expandDollarRnmLst(configval):
+    """
+        expand $RNMLST{whatever} in text
+    """
+    if debug: print "expanding configval:", configval
+
+    def replfunc(match):
+        return expandRnmLst(match)
+    
+    limit = 100
+    while drnmlst_re.search(configval) and limit > 0:
+        configval = drnmlst_re.sub( replfunc, configval )
+        limit = limit - 1
+    return configval
+
+def expandRnmLst(match):
+    """
+    Given ap match object, get the corresponding function value
+    """
+    
+    rnmlstargs = match.group(1).split(',')
+    
+    fprfx = rnmlstargs[0]
+    flist = rnmlstargs[1:]
+
+    flist_new = []
+    for f in flist:
+        flist_new.append(fprfx+f)
+    
+    return ','.join(flist_new)
+    
+def recurseExpandDollarRnmLst(res,cur):
+    """
+    recursively apply expansion of $RNMLST{whatever}
+    """
+    for sk in cur:
+	if cur[sk].__class__ == ''.__class__:
+	    cur[sk] = expandDollarRnmLst(cur[sk])
+	else:
+	    recurseExpandDollarRnmLst(res,cur[sk])
+
+#
 # - Following are for expanding $LSTCOL{listname,var1,var2,...} type patterns
 #
 
@@ -538,6 +585,8 @@ def expandWCL(wrapopts):
 
     recurseExpandDollarFunc(res, res)
 
+    recurseExpandDollarRnmLst(res, res)
+    
     return res
 
 def genProvenance(WCLOptions, exitstatus, starttime):
