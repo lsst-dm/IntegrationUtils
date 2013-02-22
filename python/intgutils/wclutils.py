@@ -15,6 +15,7 @@ Contains utilities for use with the Workflow Control Language
 
 import sys
 import re
+import os
 from collections import OrderedDict
 from collections import Mapping
 
@@ -153,6 +154,9 @@ def updateDict(d, u):
             d[k] = u[k]
     return d
     
+def getFilename(fullname):
+    """Get filename from fullname, currently equivalent to returning basename"""
+    return os.path.basename(fullname)
 
 ############################################################
 def _run_test():
