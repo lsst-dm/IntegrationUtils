@@ -67,7 +67,10 @@ def read_wcl(in_file=None, cmdline=False):
             # handle includes
             patmatch = re.search("<<include (\S+)>>", line)
             if patmatch is not None:
-                wcl_file2 = open(patmatch.group(1))
+                # expand ~ and env vars in filename
+                filename2 = os.path.expandvars(os.path.expanduser(patmatch.group(1)))
+
+                wcl_file2 = open(filename2)
                 wcl_dict2 = read_wcl(wcl_file2, cmdline)
                 wcl_file2.close()
                 updateDict(wcl_dict, wcl_dict2)
