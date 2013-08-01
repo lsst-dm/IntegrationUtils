@@ -136,7 +136,10 @@ def expandVar(match, fulldict, temp_dict, loopcheck = {}):
 	expanded = format % int(expanded)
 
     if func == 'trim':
-	expanded =expanded[0:expanded.rfind('.')]
+        trimstart=expanded.rfind('/')
+        if trimstart == -1:
+           trimstart = 0
+	expanded =expanded[0:expanded.find('.',trimstart)]
 
     del loopcheck[varname]
 
