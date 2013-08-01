@@ -399,9 +399,10 @@ def expandLstCol(match,fulldict):
     
     lstargs = match.group(1).split(',')
     
-    listname = lstargs[0]
-    lineno = int(lstargs[1])
-    lstargs = lstargs[2:]
+    listmode = int(lstargs[0])
+    listname = lstargs[1]
+    lineno = int(lstargs[2])
+    lstargs = lstargs[3:]
 
     try:
         f = open(listname)
@@ -411,10 +412,11 @@ def expandLstCol(match,fulldict):
         print "Failed to open %s. Exiting." %  listname
         exit(1)
    
+    icol = -1
     varsel = []
     for key in fulldict['list']:
-    	if 'listname' in fulldict['list'][key]:
-    	    if fulldict['list'][key]['listname']==listname:
+    	if 'fullname' in fulldict['list'][key]:
+    	    if fulldict['list'][key]['fullname']==listname:
     		if 'columns' in fulldict['list'][key]:  	
     		    clmlst = fulldict['list'][key]['columns'].split(',')
                     if lineno >=0: 
@@ -465,10 +467,39 @@ def expandLstCol(match,fulldict):
     		    exit(1)
 
     if len(varsel) > 0:
-        return ','.join(varsel)
+        if listmode == 0:
+            # list of files returned as a file containing the filenames
+	    if lineno >= 0:
+	        print "LSTCOL expander: listmode == 1 only supported when reading an entire single column."
+		exit(1)
+	    if icol < 0:
+	        print "LSTCOL expander: Column index not found for listmode == 1."
+		exit(1)
+            # construct name of file that will hold the list by prepending column number
+            outlist = 'c'+str(icol)+'-'+os.path.basename(listname)
+            print "LSTCOL expander: checking existence of %s" % outlist
+            if os.path.exists(outlist):
+                print "LSTCOL expander: file %s exists" % outlist
+                print "LSTCOL expander: now deleting %s" % outlist
+                os.remove(outlist)
+	    print "LSTCOL expander: creating/recreating %s" % outlist
+            nl = 0
+	    fout = open(outlist,'w')
+	    for v in varsel:
+	        fout.write(v+'\n')
+		nl += 1
+	    fout.close()
+	    print "LSTCOL expander: wrote %s lines to %s" % (nl,outlist)
+	    return outlist
+	elif listmode == 1:
+	    # list of files returned as a comma seperated list of filenames
+            return ','.join(varsel)
+	else:
+     	    print "LSTCOL expander: unknown listmode option."
+	    exit(1) 
     else:
      	print "Failed to find listfile column variables." 
-       
+        exit(1)
 
 def recurseExpandDollarLstCol(res,cur):
     """
