@@ -50,14 +50,18 @@ def _recurs_write_wcl(wcl_dict, out_file, sortit, inc_indent, curr_indent):
                         " = " + str(value)
 
 
-def read_wcl(in_file=None, cmdline=False):
+def read_wcl(in_file=None, cmdline=False, filename='stdin'):
     """Reads WCL text from an open file object and returns a dictionary"""
+
+
     wcl_dict = OrderedDict()
     curr = wcl_dict
     stack = []  # to keep track of current sub-dictionary
+    stackkeys = ['__topwcl__']  # to keep track of current section key
     stack.append(wcl_dict) # 
 
     line = in_file.readline()
+    linecnt = 1
     while line:
         # delete comments
         line = line.split('#')[0]
@@ -71,10 +75,11 @@ def read_wcl(in_file=None, cmdline=False):
                 filename2 = os.path.expandvars(os.path.expanduser(patmatch.group(1)))
 
                 wcl_file2 = open(filename2)
-                wcl_dict2 = read_wcl(wcl_file2, cmdline)
+                wcl_dict2 = read_wcl(wcl_file2, cmdline, filename2)
                 wcl_file2.close()
                 updateDict(wcl_dict, wcl_dict2)
                 line = in_file.readline()
+                linecnt += 1
                 continue
     
             # handle group closing line <\string>
@@ -83,21 +88,62 @@ def read_wcl(in_file=None, cmdline=False):
                 key = pat_match.group(1).lower()
                 if key == 'cmdline' or key == 'replace':
                     cmdline = False
-                stack.pop()
-                curr = stack[len(stack)-1]
-                while not key in curr: 
+                sublabel = '__sublabel__' in curr   
+                if sublabel:
+                    del curr['__sublabel__']
+        
+                if key == stackkeys[len(stackkeys)-1]:
+                    stackkeys.pop()
                     stack.pop()
                     curr = stack[len(stack)-1]
+                elif sublabel: 
+                    if key == stackkeys[len(stackkeys) - 2]:
+                        stackkeys.pop()
+                        stack.pop()
+                        curr = stack[len(stack)-1]
+
+                        stackkeys.pop()
+                        stack.pop()
+                        curr = stack[len(stack)-1]
+                    else:
+                        print "******************************"
+                        print "Linecnt =", linecnt
+                        print "Line =", line.strip()
+                        print "Closing Key =", key
+                        _print_stack(stackkeys, stack)
+
+                        raise SyntaxError('File %s Line %d - Error:  Invalid or missing section close.   Got close for %s. Expecting close for %s.' % (filename, linecnt, key, stackkeys[len(stackkeys) - 2]))
+                else:
+                    print "******************************"
+                    print "Linecnt =", linecnt
+                    print "Line =", line.strip()
+                    print "Closing Key =", key
+                    _print_stack(stackkeys, stack)
+                    raise SyntaxError('File %s Line %d - Error:  Invalid or missing section close.  Got close for %s. Expecting close for %s.' % (filename, linecnt, key, stackkeys[len(stackkeys)-1]))
+                    
                 line = in_file.readline()
+                linecnt += 1
                 continue
     
-            # handle group opening line <str1 str2> or <str1>
+            # handle group opening line <key sublabel> or <key>
             pat_match = re.search("^\s*<(\S+)\s*(\S+)?>\s*$", line)
             if pat_match is not None:
                 key = pat_match.group(1).lower()
-    
+
+                # check for case where missing / when closing section
+                if key == stackkeys[-1]:
+                    print "******************************"
+                    print "Linecnt =", linecnt
+                    print "Line =", line.strip()
+                    print "Opening Key =", key
+                    _print_stack(stackkeys, stack)
+                    raise SyntaxError('File %s Line %d - Error:  found child section with same name (%s)' % (filename, linecnt, key))
+
+                stackkeys.append(key)
+
                 if not key in curr: 
                     curr[key] = OrderedDict()
+
                 stack.append(curr[key])
                 curr = curr[key]
     
@@ -106,11 +152,14 @@ def read_wcl(in_file=None, cmdline=False):
 
                 if pat_match.group(2) is not None:
                     val = pat_match.group(2).lower()
+                    stackkeys.append(val)
                     if not val in curr: 
                         curr[val] = OrderedDict()
+                    curr[val]['__sublabel__'] = True
                     stack.append(curr[val])
                     curr = curr[val]
                 line = in_file.readline()
+                linecnt += 1
                 continue
     
             # handle key/val line: key = val 
@@ -122,6 +171,7 @@ def read_wcl(in_file=None, cmdline=False):
                     key = key.lower()
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
+                linecnt += 1
                 continue
 
             pat_key_val = "^\s*(\S+)(\s+)([^=].*)\s*$"
@@ -132,20 +182,23 @@ def read_wcl(in_file=None, cmdline=False):
                     key = key.lower()
                 curr[key] = pat_match.group(3).strip()
                 line = in_file.readline()
+                linecnt += 1
                 continue
             
-            print "Warning: Ignoring the following line (did not match patterns):"
+            print "Warning: Ignoring line #%d (did not match patterns):" % linecnt
             print line
     
         # goto next line if no matches
         line = in_file.readline()
+        linecnt += 1
     
     # done parsing input, should only be main dict in stack
-    if len(stack) != 1:
-        assert("Error parsing wcl_file.  Check that all groups \
-                have closing line.")
+    if len(stack) != 1 or len(stackkeys) != 1:
+        _print_stack(stackkeys, stack)
+        raise SyntaxError("File %s - Error parsing wcl_file.  Check that all sections have closing line." % filename)
 
     return wcl_dict
+
 
 def updateDict(d, u):
     """ update dictionary recursively to update nested dictionaries """
@@ -170,13 +223,35 @@ def _run_test():
 
     if len(sys.argv) != 2:
         test_wcl_file = sys.stdin
+        test_fname = 'stdin'
     else:
         test_fname = sys.argv[1]
         test_wcl_file = open(test_fname, "r")
-    test_wcl_dict = read_wcl(test_wcl_file)
+    try:
+        test_wcl_dict = read_wcl(test_wcl_file, filename=test_fname)
+    except SyntaxError as err:
+        print err
+        sys.exit(1)
+        
     test_wcl_file.close()
     write_wcl(test_wcl_dict, sys.stdout, False, 4)
 #    write_wcl(test_wcl_dict, sys.stdout, True, 4)
+
+
+def _print_stack(stackkeys, stack):
+    print "----- STACK -----"
+    if len(stackkeys) != len(stack):
+        print "\tWarning: stackkeys and stack not same length"
+    for i in range(0,max(len(stackkeys), len(stack))):
+        k = None
+        s = None
+        if i < len(stackkeys):
+            k = stackkeys[i] 
+        if i < len(stack):
+            s = stack[i].keys()
+        print "\t%d: %s = %s" % (i, k, s)
+    print "\n\n"
+    
 
 if __name__ ==  "__main__":
     _run_test()
