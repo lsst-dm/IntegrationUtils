@@ -655,8 +655,9 @@ def genProvenance(WCLOptions, exitstatus, starttime):
 
 argpos_re = re.compile("^_(\d+)_\S*$")
 
-def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
-
+#MMGdef buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
+#MMG EXEC_CMD_HYPHENS = allsingle  # alldouble, mixed_gnu
+def buildStockCommand(WCLOptions, nth = 1, cmd_hyphen = None):
     """
         Build a command line from an expanded wcl options file
     """
@@ -669,8 +670,18 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
         cmdlist = [ WCLOptions["exec_%d" % nth]["command"] ]
     else:
         cmdlist = [ WCLOptions["exec_%d" % nth]["execname"] ]
+
+    # function arg overrides exec section
+    if cmd_hyphen is None and WCLOptions["exec_%d" % nth].has_key("cmd_hyphen"):
+        cmd_hyphen = WCLOptions["exec_%d" % nth]["cmd_hyphen"] 
  
-    # 
+    hyphen = '-'
+    if cmd_hyphen == "alldouble":
+        hyphen = '--'
+    elif not isinstance(cmd_hyphen, str):   # deprecated doubledash behavior
+        if cmd_hyphen:
+            hyphen = '--'
+
     # If "cmdline" section exists, old style "cmdopts", "cmdargs", and 
     # "cmdflags" sections will be ignored
     #
@@ -679,16 +690,21 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
         tmpdct = {}
 
 	for k, v in WCLOptions["exec_%d" % nth]["cmdline"].items():
+            if cmd_hyphen == "mixed_gnu":  # determine single or double depending upon char or word opt
+                if len(k) > 1:
+                    hyphen = '--'
+                else:
+                    hyphen = '-'
 
             patmatch = argpos_re.match(k)
 	    if patmatch:
 	        tmpdct[patmatch.group(1)] = v
             else:
-                if not k.startswith('_'):
-                    if v != "_flag":
-			cmdlist.append("%s%s '%s'" %(["-","--"][doubledash], k, v))
+                if not k.startswith('_'):   # if not a positional argument
+                    if v != "_flag":  # if not a flag option
+			cmdlist.append("%s%s '%s'" %(hyphen, k, v))
 		    else:
-	                cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+	                cmdlist.append("%s%s" %(hyphen, k))
 	        else:
 	            cmdlist.append("'%s'" % v)
 	
@@ -697,7 +713,6 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
 	    cmdlist.insert(int(k),"'%s'" % tmpdct[k])
 	
     else:
-    
         if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
             print "cmdargs is now deprecated!"
 	    for v in comma_re.split(WCLOptions["exec_%d" % nth]["cmdargs"]):
@@ -706,12 +721,12 @@ def buildStockCommand(WCLOptions, nth = 1, doubledash = 0):
         if  WCLOptions["exec_%d" % nth].has_key("cmdflags"):
             print "cmdflags is now deprecated!"
 	    for v in comma_re.split(WCLOptions["exec_%d" % nth]["cmdflags"]):
-		cmdlist.append("%s%s" % (["-","--"][doubledash], v))
+		cmdlist.append("%s%s" % (["-","--"][cmd_hyphen], v))
      
         if  WCLOptions["exec_%d" % nth].has_key("cmdopts"):
             print "cmdopts is now deprecated!"
 	    for k, v in WCLOptions["exec_%d" % nth]["cmdopts"].items():
-	        cmdlist.append("%s%s" %(["-","--"][doubledash], k))
+	        cmdlist.append("%s%s" %(["-","--"][cmd_hyphen], k))
 	        cmdlist.append(v)
 
     return ' '.join(cmdlist)
