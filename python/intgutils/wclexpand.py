@@ -702,15 +702,18 @@ def buildStockCommand(WCLOptions, nth = 1, cmd_hyphen = None):
             else:
                 if not k.startswith('_'):   # if not a positional argument
                     if v != "_flag":  # if not a flag option
-			cmdlist.append("%s%s '%s'" %(hyphen, k, v))
+			#SNE cmdlist.append("%s%s '%s'" %(hyphen, k, v))
+			cmdlist.append("%s%s %s" %(hyphen, k, v))
 		    else:
 	                cmdlist.append("%s%s" %(hyphen, k))
 	        else:
-	            cmdlist.append("'%s'" % v)
+	            #SNE cmdlist.append("'%s'" % v)
+	            cmdlist.append("%s" % v)
 	
         # insert position sensitive arguments into specified location in argument list
 	for k in sorted(tmpdct.iterkeys()):
-	    cmdlist.insert(int(k),"'%s'" % tmpdct[k])
+	    #SNE cmdlist.insert(int(k),"'%s'" % tmpdct[k])
+	    cmdlist.insert(int(k),"%s" % tmpdct[k])
 	
     else:
         if  WCLOptions["exec_%d" % nth].has_key("cmdargs"):
