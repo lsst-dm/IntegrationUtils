@@ -663,6 +663,7 @@ def buildStockCommand(WCLOptions, nth = 1, cmd_hyphen = None):
     """
 
     if not "exec_%d" % nth in WCLOptions:
+         print "Severe warning: in buildStockCommand could not find exec section named 'exec_%d'" % nth
          return None
 
     if WCLOptions["exec_%d" % nth].has_key("command"):
