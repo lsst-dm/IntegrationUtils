@@ -1,0 +1,2 @@
+LISTENTRY = 'line'
+DEFAULT_QUERY_OUTPUT_FORMAT = 'json'
