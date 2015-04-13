@@ -159,10 +159,10 @@ def gen_file_list(dbh, query, debug = 3):
 
 
 ###########################################################
-def convert_single_files_to_lines(filelist):
+def convert_single_files_to_lines(filelist, initcnt=1):
     """ Convert single files to dict of lines in prep for output """
 
-    count = 1
+    count = initcnt 
     linedict = {'list': {}}
 
     if type(filelist) is dict and len(filelist) > 1:
