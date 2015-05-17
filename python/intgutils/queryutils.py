@@ -7,7 +7,7 @@
 import re
 import json 
 
-import intgutils.wclutils as wclutils
+from intgutils.wcl import WCL
 import intgutils.intgdefs as intgdefs
 import despymisc.miscutils as miscutils
 
@@ -217,8 +217,9 @@ def output_lines_xml(filename, dataset):
 def output_lines_wcl(filename, dataset):
     """ Writes dataset to file in WCL format """
 
+    dswcl = WCL(dataset)
     with open(filename, "w") as wclfh:
-        wclutils.write_wcl(dataset, wclfh, True, 4)  # print it sorted
+        dswcl.write_wcl(wclfh, True, 4)  # print it sorted
 
 
 ###########################################################
