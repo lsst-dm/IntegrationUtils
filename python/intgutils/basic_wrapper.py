@@ -13,7 +13,7 @@ from collections import OrderedDict
 
 
 import despymisc.subprocess4 as subprocess4
-import intgutils.special_metadata_funcs as smfuncs
+import despyfits.fits_special_metadata as fspmeta
 import intgutils.intgdefs as intgdefs
 import intgutils.intgmisc as intgmisc
 import despyfits.fitsutils as fitsutils
@@ -358,8 +358,8 @@ class BasicWrapper():
 
         miscutils.fwdebug(3, 'BASICWRAP_DEBUG', "INFO: Beg execnum=%s" % execnum, WRAPPER_OUTPUT_PREFIX)
 
-        existfiles = []
-        missingfiles = []
+        existfiles = {}
+        missingfiles = {}
         
         if intgdefs.IW_OUTPUTS in exwcl:
             for sect in miscutils.fwsplit(exwcl[intgdefs.IW_OUTPUTS]):
@@ -455,7 +455,7 @@ class BasicWrapper():
                     match = re.search("(?i)\$HDRFNC\{([^}]+)\}", data[0])
                     if match:
                         funckey = match.group(1)
-                        smf = getattr(smfuncs, 'func_%s' % funckey.lower())
+                        smf = getattr(fspmeta, 'func_%s' % funckey.lower())
                         val = smf(fullname, hdulist, whichhdu)
                 else:
                     val = self.inputwcl.replace_vars(data[0])
