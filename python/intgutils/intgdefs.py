@@ -1,14 +1,16 @@
-VALID_BANDS = ['u','g','r','i','z','Y','VR']
-
 LISTENTRY = 'line'
+LIST_FORMAT = 'format'
+DEFAULT_LIST_FORMAT = 'textsp' 
 DEFAULT_QUERY_OUTPUT_FORMAT = 'wcl'
+
+
 
 # IW_  (wrapper) input wcl
 # OW_  (wrapper) output wcl
 IW_CHECK_CMDLINE = 'check_cmdline'
 IW_INPUTS = 'used'
 IW_OUTPUTS = 'was_generated_by'
-IW_WDF = 'was_derived_from'
+IW_DERIVATION = 'was_derived_from'
 IW_CHECK_COMMAND = 'check_command'
 IW_CMD_REQ_ARGS = 'cmd_req_args'
 
@@ -34,12 +36,8 @@ OW_EXEC_PREFIX = IW_EXEC_PREFIX
 OW_INPUTS = IW_INPUTS
 OW_OUTPUTS = IW_OUTPUTS
 OW_OUTPUTS_BY_SECT = 'outputs_by_sect'
-OW_WDF = IW_WDF
+OW_WDF = IW_DERIVATION
 OW_EXEC_PREFIX = IW_EXEC_PREFIX
 OW_EXEC_SECT = 'exec'
 OW_PROV_SECT = 'provenance'
 OW_META_SECT = 'file_metadata'
-
-PROV_INPUTS = 'used'
-PROV_OUTPUTS = 'was_generated_by'
-PROV_WDF = 'was_derived_from'
