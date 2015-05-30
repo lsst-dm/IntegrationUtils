@@ -1,6 +1,20 @@
+#!/usr/bin/env python
+
+# $Id$
+# $Rev::                                  $:  # Revision of last commit.
+# $LastChangedBy::                        $:  # Author of last commit.
+# $LastChangedDate::                      $:  # Date of last commit.
+
+"""
+Contains misc integration utilities
+"""
+
 import shlex
+import re
 import despymisc.subprocess4 as subprocess4
+import despymisc.miscutils as miscutils
 from collections import OrderedDict
+
 
 #######################################################################
 def run_exec(cmd):
@@ -42,16 +56,20 @@ def convert_col_string_to_list(colstr, with_format=True):
 
 #######################################################################
 def get_fullnames_from_listfile(listfile, linefmt, colstr):
+    miscutils.fwdebug(0, 'INTGMISC_DEBUG', 'colstr=%s' % colstr)
     columns = convert_col_string_to_list(colstr, False)
+    miscutils.fwdebug(0, 'INTGMISC_DEBUG', 'columns=%s' % columns)
 
     fullnames = {}
     pos2fsect = {} 
-    for pos in range(0..len(columns)):
+    for pos in range(0, len(columns)):
         lcol = columns[pos].lower()
         if lcol.endswith('.fullname'):
             filesect = lcol[:-9]
-        pos2fsect[pos] = filesect
-        fullnames[filesect] = []
+            pos2fsect[pos] = filesect
+            fullnames[filesect] = []
+        # else a data column instead of a filename
+    miscutils.fwdebug(0, 'INTGMISC_DEBUG', 'pos2fsect=%s' % pos2fsect)
 
     if linefmt == 'config' or linefmt == 'wcl':
         miscutils.fwdie('Error:  wcl list format not currently supported (%s)' % listfile, 1)
@@ -73,8 +91,6 @@ def get_fullnames_from_listfile(listfile, linefmt, colstr):
             
                 # save each fullname in line
                 for pos in pos2fsect:
-                    fullnames[pos2fsect[pos]].append(line[pos])
+                    fullnames[pos2fsect[pos]].append(lineinfo[pos])
 
     return fullnames
-
-
