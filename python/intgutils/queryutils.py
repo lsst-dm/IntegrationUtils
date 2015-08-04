@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # $Id$
 # $Rev::                                  $:  # Revision of last commit.
-# $LastChangedBy::                        $:  # Author of last commit. 
+# $LastChangedBy::                        $:  # Author of last commit.
 # $LastChangedDate::                      $:  # Date of last commit.
 
 import re
-import json 
+import json
 
 from intgutils.wcl import WCL
 import intgutils.intgdefs as intgdefs
@@ -16,20 +16,20 @@ def make_where_clause(dbh, key, value):
     """ return properly formatted string for a where clause """
 
     if ',' in value:
-        value = value.replace(' ','').split(',')
+        value = value.replace(' ', '').split(',')
 
     condition = ""
     if type(value) is list:  # multiple values
         extra = []
         ins = []
         nots = []
-        for v in value:
-            if '%' in v:
-                extra.append(make_where_clause(dbh, key, v))
-            elif '!' in v:
-                nots.append(make_where_clause(dbh, key, v))
+        for val in value:
+            if '%' in val:
+                extra.append(make_where_clause(dbh, key, val))
+            elif '!' in val:
+                nots.append(make_where_clause(dbh, key, val))
             else:
-                ins.append(dbh.quote(v))
+                ins.append(dbh.quote(val))
 
         if len(ins) > 0:
             condition += "%s IN (%s)" % (key, ','.join(ins))
@@ -45,7 +45,8 @@ def make_where_clause(dbh, key, value):
         if len(nots) > 0:
             condition += ' AND '.join(nots)
 
-    elif '*' in value or '^' in value or '$' in value or '[' in value or ']' in value or '&' in value:
+    elif '*' in value or '^' in value or '$' in value or \
+         '[' in value or ']' in value or '&' in value:
         condition = dbh.get_regexp_clause(key, value)
     elif '%' in value and '!' not in value:
         condition = '%s like %s' % (key, dbh.quote(value))
@@ -86,21 +87,21 @@ def create_query_string(dbh, qdict):
         if 'select_fields' in tabledict:
             table_select_fields = tabledict['select_fields']
             if type(table_select_fields) is not list:
-                table_select_fields = table_select_fields.lower().replace(' ','').split(',')
+                table_select_fields = table_select_fields.lower().replace(' ', '').split(',')
 
             if 'all' in table_select_fields:
                 selectfields.append("%s.*" % (tablename))
             else:
                 for field in table_select_fields:
-                    selectfields.append("%s.%s" % (tablename,field))
+                    selectfields.append("%s.%s" % (tablename, field))
 
         if 'key_vals' in tabledict:
-            for key,val in tabledict['key_vals'].items():
+            for key, val in tabledict['key_vals'].items():
                 whereclauses.append(make_where_clause(dbh, '%s.%s' % (tablename, key), val))
 
         if 'join' in tabledict:
-             for j in tabledict['join'].lower().split(','):
-                pat_key_val = "^\s*([^=]+)(\s*=\s*)(.+)\s*$"
+            for j in tabledict['join'].lower().split(','):
+                pat_key_val = r"^\s*([^=]+)(\s*=\s*)(.+)\s*$"
                 pat_match = re.search(pat_key_val, j)
                 if pat_match is not None:
                     key = pat_match.group(1)
@@ -108,19 +109,21 @@ def create_query_string(dbh, qdict):
                         (jtable, key) = key.split('.')
                     else:
                         jtable = tablename
-        
+
                     val = pat_match.group(3).strip()
                     whereclauses.append('%s.%s=%s' % (jtable, key, val))
 
     query = "SELECT %s FROM %s WHERE %s" % \
-                (','.join(selectfields),               
-                 ','.join(fromtables), 
+                (','.join(selectfields),
+                 ','.join(fromtables),
                  ' AND '.join(whereclauses))
     return query
 
 
 ###########################################################
 def gen_file_query(dbh, query, debug=3):
+    """ Generic file query """
+
     sql = create_query_string(dbh, query)
     if debug >= 3:
         print "sql =", sql
@@ -131,15 +134,15 @@ def gen_file_query(dbh, query, debug=3):
 
     result = []
     for line in curs:
-        d = dict(zip(desc, line))
-        result.append(d)
+        linedict = dict(zip(desc, line))
+        result.append(linedict)
 
     curs.close()
     return result
 
 
 ###########################################################
-def gen_file_list(dbh, query, debug = 3):
+def gen_file_list(dbh, query, debug=3):
     """ Return list of files retrieved from the database using given query dict """
 
 #    query['location']['key_vals']['archivesites'] = '[^N]'
@@ -148,12 +151,14 @@ def gen_file_list(dbh, query, debug = 3):
 
     if debug:
         print "gen_file_list: calling gen_file_query with", query
-    
+
     results = gen_file_query(dbh, query)
 
-    miscutils.fwdebug(1, 'PFWFILELIST_DEBUG', "number of files in list from query = %s" % len(results))
+    if miscutils.fwdebug_check(1, 'PFWFILELIST_DEBUG'):
+        miscutils.fwdebug_print("number of files in list from query = %s" % len(results))
 
-    miscutils.fwdebug(3, 'PFWFILELIST_DEBUG', "list from query = %s" % results)
+    if miscutils.fwdebug_check(3, 'PFWFILELIST_DEBUG'):
+        miscutils.fwdebug_print("list from query = %s" % results)
 
     return results
 
@@ -162,7 +167,7 @@ def gen_file_list(dbh, query, debug = 3):
 def convert_single_files_to_lines(filelist, initcnt=1):
     """ Convert single files to dict of lines in prep for output """
 
-    count = initcnt 
+    count = initcnt
     linedict = {'list': {}}
 
     if type(filelist) is dict and len(filelist) > 1:
@@ -191,7 +196,7 @@ def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT
         output_lines_json(filename, dataset)
     else:
         raise Exception('Invalid outtype (%s).  Valid outtypes: xml, wcl, json' % outtype)
-        
+
 
 ###########################################################
 def output_lines_xml(filename, dataset):
@@ -199,15 +204,15 @@ def output_lines_xml(filename, dataset):
 
     with open(filename, 'w') as xmlfh:
         xmlfh.write("<list>\n")
-        for k, line in dataset.items():
+        for datak, line in dataset.items():
             xmlfh.write("\t<line>\n")
-            for name, file in line.items():
+            for name, filedict in line.items():
                 xmlfh.write("\t\t<file nickname='%s'>\n" % name)
-                for key,val in file.items():
+                for key, val in filedict.items():
                     if key.lower() == 'ccd':
                         val = "%02d" % (val)
-                    xmlfh.write("\t\t\t<%s>%s</%s>" % (k,val,k))
-                xmlfh.write("\t\t\t<fileid>%s</fileid>\n" % (file['id']))
+                    xmlfh.write("\t\t\t<%s>%s</%s>" % (datak, val, datak))
+                xmlfh.write("\t\t\t<fileid>%s</fileid>\n" % (filedict['id']))
                 xmlfh.write("\t\t</file>\n")
             xmlfh.write("\t</line>\n")
         xmlfh.write("</list>\n")
@@ -227,4 +232,4 @@ def output_lines_json(filename, dataset):
 
     """ Writes dataset to file in json format """
     with open(filename, "w") as jsonfh:
-        json.dump(dataset, jsonfh, indent=4, separators=(',', ': '))  
+        json.dump(dataset, jsonfh, indent=4, separators=(',', ': '))
