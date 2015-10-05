@@ -224,7 +224,7 @@ def output_lines_wcl(filename, dataset):
 
     dswcl = WCL(dataset)
     with open(filename, "w") as wclfh:
-        dswcl.write_wcl(wclfh, True, 4)  # print it sorted
+        dswcl.write(wclfh, True, 4)  # print it sorted
 
 
 ###########################################################
