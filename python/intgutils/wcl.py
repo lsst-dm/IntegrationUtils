@@ -18,7 +18,6 @@ import sys
 import re
 import os
 from collections import OrderedDict
-from collections import Mapping
 import copy
 
 
@@ -49,8 +48,8 @@ class WCL(OrderedDict):
         return found
 
     ###########################################################################
-    def __getitem__(self, key, default=None, opts=None):
-        """ x.__getitem__(y) <==> x[y] """
+    def get(self, key, opts=None, default=None):
+        """ Gets value of key in wcl, follows search order and section notation """
 
         (found, value) = self.search(key, opts)
         if not found:
@@ -59,9 +58,9 @@ class WCL(OrderedDict):
         return value
 
     ###########################################################################
-    def __setitem__(self, key, val):
-        """ x.__setitem__(i, y) <==> x[i]=y """
-        OrderedDict.__setitem__(self, key, val)
+    #def __setitem__(self, key, val):
+    #    """ x.__setitem__(i, y) <==> x[i]=y """
+    #    OrderedDict.__setitem__(self, key, val)
 
 
     ###########################################################################
@@ -130,10 +129,12 @@ class WCL(OrderedDict):
             # override with current values passed into function if given
             if opt is not None and 'currentvals' in opt:
                 for ckey, cval in opt['currentvals'].items():
-                    #print "using specified curval %s = %s" % (ckey, cval)
+                    if miscutils.fwdebug_check(8, 'WCL_DEBUG'):
+                        miscutils.fwdebug_print("using specified curval %s = %s" % (ckey, cval))
                     curvals[ckey] = cval
 
-            #print "curvals = ", curvals
+            if miscutils.fwdebug_check(6, 'WCL_DEBUG'):
+                miscutils.fwdebug_print("curvals = %s" % curvals)
             if key in curvals:
                 #print "found %s in curvals" % (key)
                 found = True
@@ -175,7 +176,8 @@ class WCL(OrderedDict):
 
         if miscutils.fwdebug_check(8, 'WCL_DEBUG'):
             miscutils.fwdebug_print("\tEND: found=%s, value=%s" % (found, value))
-        return (found, value)
+
+        return found, value
 
 
     #######################################################################
@@ -240,8 +242,7 @@ class WCL(OrderedDict):
                     sortit = save_sortit
                     print >> out_file, ' ' * curr_indent + "</" + str(key) + ">"
                 elif value is not None:
-                    print >> out_file, ' ' * curr_indent + str(key) + \
-                            " = " + str(value)
+                    print >> out_file, ' ' * curr_indent + "%s = %s" % (str(key), str(value))
 
 
     def read(self, in_file=None, cmdline=False, filename='stdin'):
@@ -255,6 +256,11 @@ class WCL(OrderedDict):
         line = in_file.readline()
         linecnt = 1
         while line:
+            line = line.strip()
+            while line.endswith('\\'):
+                linecnt +=1
+                line = line[:-1] + in_file.readline().strip()
+
             # delete comments
             line = line.split('#')[0]
 
@@ -263,8 +269,11 @@ class WCL(OrderedDict):
                 # handle includes
                 patmatch = re.search(r"<<include (\S+)>>", line)
                 if patmatch is not None:
+                    # replace wcl vars in filename
+                    filename2 = replfuncs.replace_vars_single(patmatch.group(1), self, None)
+
                     # expand ~ and env vars in filename
-                    filename2 = os.path.expandvars(os.path.expanduser(patmatch.group(1)))
+                    filename2 = os.path.expandvars(os.path.expanduser(filename2))
 
                     wclobj2 = WCL()
                     with open(filename2, "r") as wclfh:
@@ -393,7 +402,9 @@ class WCL(OrderedDict):
         # done parsing input, should only be main dict in stack
         if len(stack) != 1 or len(stackkeys) != 1:
             self._print_stack(stackkeys, stack)
-            raise SyntaxError("File %s - Error parsing wcl_file.  Check that all sections have closing line." % filename)
+            print "File %s - Error parsing wcl_file." % filename
+            print "Check that all sections have closing line."
+            raise SyntaxError("File %s - missing section closing line." % filename)
 
     ############################################################
     def update(self, udict):
@@ -401,8 +412,13 @@ class WCL(OrderedDict):
         miscutils.updateOrderedDict(self, udict)
 
     ###########################################################################
-    def getfull(self, key, default=None, opts=None):
+    def getfull(self, key, opts=None, default=None):
         """ Return with variables replaced and expanded if string(s) """
+
+        if miscutils.fwdebug_check(9, "WCL_DEBUG"):
+            miscutils.fwdebug_print("BEG - key=%s" % key)
+            miscutils.fwdebug_print("default - %s" % default)
+            miscutils.fwdebug_print("opts - %s" % opts)
 
         (found, value) = self.search(key, opts)
         if not found:
@@ -418,9 +434,10 @@ class WCL(OrderedDict):
                miscutils.convertBool(newopts[intgdefs.REPLACE_VARS]):
                 newopts['expand'] = True
                 if miscutils.fwdebug_check(9, "WCL_DEBUG"):
-                    miscutils.fwdebug_print("calling replace_vars value=%s, opts=%s" % (value, newopts))
-    
-                (value, keeps) = replfuncs.replace_vars(value, self, newopts)
+                    miscutils.fwdebug_print("calling replace_vars value=%s, opts=%s" % \
+                                            (value, newopts))
+
+                (value, _) = replfuncs.replace_vars(value, self, newopts)
                 if len(value) == 1:
                     value = value[0]
 
