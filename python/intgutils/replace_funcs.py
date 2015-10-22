@@ -53,7 +53,7 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
     newstr = copy.copy(instr)
 
     # be careful of nested variables  ${RMS_${BAND}}
-    varpat = r"(?i)\$%s\{([^$}]+)\}" % stype 
+    varpat = r"(?i)\$%s\{([^$}]+)\}" % stype
 
     match_var = re.search(varpat, newstr)
     while match_var and count < maxtries:
@@ -78,15 +78,33 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
         if stype == 'HEAD':
             if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
                 miscutils.fwdebug_print("\tfound HEAD variable to expand: %s " % (newvar))
-    
-            (fname, newvar2) = miscutils.fwsplit(newvar, ',')  
+
+            varlist = miscutils.fwsplit(newvar, ',')
+            fname = varlist[0]
             if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
                 miscutils.fwdebug_print("\tHEAD variable fname: %s " % (fname))
-                miscutils.fwdebug_print("\tHEAD variable header key: %s " % (newvar2))
             hdulist = pyfits.open(fname, 'readonly')
-            newval = fitsutils.get_hdr_value(hdulist, newvar2)
+            newval = []
+            for key in varlist[1:]:
+                if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
+                    miscutils.fwdebug_print("\tHEAD variable header key: %s " % (key))
+                newval.append(str(fitsutils.get_hdr_value(hdulist, key)))
+            miscutils.fwdebug_print("\tnewval: %s " % (newval))
+            newval = ','.join(newval)
             haskey = True
             hdulist.close()
+        elif stype == 'FUNC':
+            if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
+                miscutils.fwdebug_print("\tfound FUNC variable to expand: %s " % (newvar))
+
+            varlist = miscutils.fwsplit(newvar, ',')
+            funcinfo = varlist[0]
+            if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
+                miscutils.fwdebug_print("\tFUNC info: %s " % (funcinfo))
+
+            specf = miscutils.dynamically_load_class(funcinfo)
+            newval = specf(varlist[1:])
+            haskey = True
         else:
             (haskey, newval) = valdict.search(newvar, opts)
 
@@ -230,6 +248,7 @@ def replace_vars(instr, valdict, opts=None):
         count += 1
         done = True
 
+
         # header vars ($HEAD{)
         (done2, newstr, keep2) = replace_vars_type(newstr, valdict, True, 'HEAD', opts)
         done = done and done2
@@ -250,6 +269,26 @@ def replace_vars(instr, valdict, opts=None):
     if count >= maxtries:
         raise Exception("Error: replace_vars function aborting from infinite loop '%s'" % instr)
 
+    ##### FUNC
+    maxtries = 100    # avoid infinite loop
+    count = 0
+    done = False
+    while not done and count < maxtries:
+        count += 1
+        done = True
+
+        # func vars ($FUNC{)
+        (done2, newstr, keep2) = replace_vars_type(newstr, valdict, True, 'FUNC', opts)
+        done = done and done2
+        keep.update(keep2)
+
+    #print "keep = ", keep
+
+    if count >= maxtries:
+        raise Exception("Error: replace_vars function aborting from infinite loop '%s'" % instr)
+
+
+    #####
     valpair = (newstr, keep)
     valuedone = []
     keepdone = []
