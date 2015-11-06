@@ -177,8 +177,7 @@ class BasicWrapper(object):
             print "exec wcl = %s" % exwcl
             raise KeyError('Missing execname in wcl for exec #%d' % execnum)
 
-        if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
-            miscutils.fwdebug_print("cmdstr = '%s'" % (cmdstr), WRAPPER_OUTPUT_PREFIX)
+        miscutils.fwdebug_print("cmd = '%s'" % (cmdstr), WRAPPER_OUTPUT_PREFIX)
         self.curr_exec['cmdline'] = cmdstr
         self.end_exec_task(0)
 
