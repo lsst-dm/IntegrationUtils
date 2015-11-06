@@ -14,7 +14,7 @@ import pyfits
 
 import despymisc.miscutils as miscutils
 import intgutils.intgdefs as intgdefs
-import despyfits.fitsutils as fitsutils
+import despyfitsutils.fitsutils as fitsutils
 
 def replace_vars_single(instr, valdict, opts=None):
     """ Return single instr after replacing vars """
