@@ -105,8 +105,13 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
             specf = miscutils.dynamically_load_class(funcinfo)
             newval = specf(varlist[1:])
             haskey = True
-        else:
+        elif hasattr(valdict, 'search'):
             (haskey, newval) = valdict.search(newvar, opts)
+        else:
+            haskey = False
+            if newvar in valdict:
+                haskey = True
+                newval = valdict[newvar]
 
         if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
             miscutils.fwdebug_print("\t newvar: %s " % (newvar))
