@@ -25,12 +25,8 @@ def check_files(fullnames):
         if os.path.exists(fname):
             bname = miscutils.parse_fullname(fname, miscutils.CU_PARSE_BASENAME)
             exists.append(bname)
-            print "check_files: exists: ", fname, bname
         else:
-            print "check_files: missing: ", fname
             missing.append(fname)
-    print "check_files: exists =", exists
-    print "check_files: missing =", missing
     return (exists, missing)
 
 #######################################################################

@@ -67,20 +67,21 @@ class BasicWrapper(object):
             miscutils.fwdebug_print("INFO:  exec sections = %s" % execs, WRAPPER_OUTPUT_PREFIX)
 
         for ekey, iw_exec in sorted(execs.items()):
-            print "ekey =", ekey
             if ekey in self.outputwcl:
                 if 'task_info' in self.outputwcl[ekey]:
                     for task,taskd in self.outputwcl[ekey]['task_info'].items():
-                        print "task =", task
                         if 'status' in taskd:
                             if taskd['status'] > 0:
                                 status = taskd['status']
-                            print "status =", status
                         else:
-                            print "missing status"
+                            if miscutils.fwdebug_check(3, "BASICWRAP_DEBUG"):
+                                miscutils.fwdebug_print("WARN: Missing status in outputwcl task_info for %s" % ekey, 
+                                                        WRAPPER_OUTPUT_PREFIX)
                             status = 1
                 else:
-                    print "missing task_info"
+                    if miscutils.fwdebug_check(3, "BASICWRAP_DEBUG"):
+                        miscutils.fwdebug_print("WARN: Missing task_info in outputwcl for %s" % ekey,
+                                                WRAPPER_OUTPUT_PREFIX)
                     status = 1
             else:
                 status = 1
@@ -165,7 +166,6 @@ class BasicWrapper(object):
 
                 # insert position sensitive arguments into specified location in argument list
                 for k in sorted(posargs.iterkeys()):
-                    print "k =", k, "posargs =", posargs[k]
                     cmdlist.insert(int(k), "%s" % posargs[k])
 
             # convert list of args into string
@@ -177,7 +177,6 @@ class BasicWrapper(object):
             print "exec wcl = %s" % exwcl
             raise KeyError('Missing execname in wcl for exec #%d' % execnum)
 
-        miscutils.fwdebug_print("cmd = '%s'" % (cmdstr), WRAPPER_OUTPUT_PREFIX)
         self.curr_exec['cmdline'] = cmdstr
         self.end_exec_task(0)
 
@@ -283,17 +282,14 @@ class BasicWrapper(object):
     def run_exec(self):
         """ Run given command line """
 
-        if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
-            miscutils.fwdebug_print("cmdline = %s" % (self.curr_exec['cmdline']),
-                                    WRAPPER_OUTPUT_PREFIX)
-        print '*' * 70
-
         self.start_exec_task('run_exec')
         cmdline = self.curr_exec['cmdline']
 
         retcode = None
         procinfo = None
 
+        miscutils.fwdebug_print("Info: cmd = %s" % cmdline, WRAPPER_OUTPUT_PREFIX)
+        print '*' * 70
         sys.stdout.flush()
         try:
             (retcode, procinfo) = intgmisc.run_exec(cmdline)
@@ -336,9 +332,7 @@ class BasicWrapper(object):
     def check_input_files(self, sectname):
         """ Check that the files for a single input file section exist """
 
-        print "check_input_files: sectname = ", sectname
         fnames = miscutils.fwsplit(self.inputwcl[intgdefs.IW_FILE_SECT][sectname]['fullname'], ',')
-        print "check_input_files: fnames = ", fnames
         (exists1, missing1) = intgmisc.check_files(fnames)
         return ({sectname: exists1}, missing1)
 
@@ -395,7 +389,6 @@ class BasicWrapper(object):
         if sectname in self.inputwcl[intgdefs.IW_FILE_SECT]:
             if 'fullname' in self.inputwcl[intgdefs.IW_FILE_SECT][sectname]:
                 fnames = replfuncs.replace_vars(self.inputwcl[intgdefs.IW_FILE_SECT][sectname]['fullname'], self.inputwcl)[0]
-                print "fnames = ", fnames
                 #fnames = miscutils.fwsplit(self.inputwcl[intgdefs.IW_FILE_SECT][sectname]['fullname'], ',')
                 fnames = miscutils.fwsplit(fnames, ',')
                 if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
@@ -434,7 +427,6 @@ class BasicWrapper(object):
             for sect in miscutils.fwsplit(exwcl[intgdefs.IW_INPUTS], ','):
                 sectkeys = sect.split('.')
                 if sectkeys[0] == intgdefs.IW_FILE_SECT:
-                    print "sectkeys[1] = ", sectkeys[1]
                     (exists, missing) = self.check_input_files(sectkeys[1])
                     existfiles.update(exists)
                     missingfiles.extend(missing)
@@ -450,7 +442,6 @@ class BasicWrapper(object):
                     print "sectkeys = ", sectkeys
                     raise KeyError("Unknown data section %s" % sectkeys[0])
 
-        print "existfiles= ", existfiles
         if len(missingfiles) != 0:
             for mfile in missingfiles:
                 miscutils.fwdebug_print("\tError: input '%s' does not exist." % mfile,
