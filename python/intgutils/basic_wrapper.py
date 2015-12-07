@@ -387,6 +387,7 @@ class BasicWrapper(object):
         missingfiles = []
 
         if sectname in self.inputwcl[intgdefs.IW_FILE_SECT]:
+            optout = intgdefs.IW_OUTPUT_OPTIONAL in self.inputwcl[intgdefs.IW_FILE_SECT][sectname]
             if 'fullname' in self.inputwcl[intgdefs.IW_FILE_SECT][sectname]:
                 fnames = replfuncs.replace_vars(self.inputwcl[intgdefs.IW_FILE_SECT][sectname]['fullname'], self.inputwcl)[0]
                 #fnames = miscutils.fwsplit(self.inputwcl[intgdefs.IW_FILE_SECT][sectname]['fullname'], ',')
@@ -399,6 +400,10 @@ class BasicWrapper(object):
                                                 WRAPPER_OUTPUT_PREFIX)
                     if os.path.exists(filen) and os.path.getsize(filen) > 0:
                         existfiles.append(filen)
+                    elif optout:
+                        if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
+                            miscutils.fwdebug_print("\tInfo: optional output file '%s' does not exist." % \
+                                                    filen, WRAPPER_OUTPUT_PREFIX)
                     else:
                         missingfiles.append(filen)
                         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
@@ -553,6 +558,7 @@ class BasicWrapper(object):
                 if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                     miscutils.fwdebug_print("INFO: dpair = %s" % dpair, WRAPPER_OUTPUT_PREFIX)
                 (parent_sect, child_sect) = miscutils.fwsplit(dpair, ':')
+                optout = intgdefs.IW_OUTPUT_OPTIONAL in self.inputwcl.get(child_sect)
                 parent_key = miscutils.fwsplit(parent_sect, '.')[-1]
                 child_key = miscutils.fwsplit(child_sect, '.')[-1]
 
@@ -561,40 +567,47 @@ class BasicWrapper(object):
                                             WRAPPER_OUTPUT_PREFIX)
                     miscutils.fwdebug_print("INFO: child_key = %s" % child_key,
                                             WRAPPER_OUTPUT_PREFIX)
+                    miscutils.fwdebug_print("INFO: optout = %s" % optout,
+                                            WRAPPER_OUTPUT_PREFIX)
 
                 if (child_key not in new_outfiles or \
                         new_outfiles[child_key] is None or \
                         len(new_outfiles[child_key]) == 0):
-                    miscutils.fwdie("ERROR: Missing child output files in wdf tuple", 1)
-
-                self.last_num_derived += 1
-                key = 'derived_%d' % self.last_num_derived
-                if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
-                    miscutils.fwdebug_print("INFO: key = %s" % key, WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdebug_print("INFO: before wdf = %s" % prov[provdefs.PROV_WDF],
-                                        WRAPPER_OUTPUT_PREFIX)
-
-                wdf[key] = OrderedDict()
-
-                if parent_key in infiles:
-                    wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(infiles[parent_key])
-                elif parent_key in new_outfiles:
-                    # this output was generated within same program/wrapper from other output files
-                    parents = []
-                    for outparent in outfiles[parent_key]:
-                        parents.append(miscutils.parse_fullname(outparent, miscutils.CU_PARSE_FILENAME))
-                    wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(parents)
+                    if optout:
+                        if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
+                            miscutils.fwdebug_print("INFO: skipping missing optional output %s:%s" % (parent_sect, child_sect),
+                                                    WRAPPER_OUTPUT_PREFIX)
+                        else:
+                            miscutils.fwdie("ERROR: Missing child output files in wdf tuple", 1)
                 else:
-                    miscutils.fwdebug_print("parent_key = %s" % parent_key, WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdebug_print("infiles.keys() = %s" % infiles.keys(),
-                                            WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdebug_print("outfiles.keys() = %s" % outfiles.keys(),
-                                            WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdebug_print("used = %s" % exwcl[intgdefs.IW_INPUTS],
-                                            WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdie("ERROR: Could not find parent files for %s" % (dpair), 1)
+                    self.last_num_derived += 1
+                    key = 'derived_%d' % self.last_num_derived
+                    if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
+                        miscutils.fwdebug_print("INFO: key = %s" % key, WRAPPER_OUTPUT_PREFIX)
+                        miscutils.fwdebug_print("INFO: before wdf = %s" % prov[provdefs.PROV_WDF],
+                                                WRAPPER_OUTPUT_PREFIX)
 
-                wdf[key][provdefs.PROV_CHILDREN] = provdefs.PROV_DELIM.join(new_outfiles[child_key])
+                    wdf[key] = OrderedDict()
+
+                    if parent_key in infiles:
+                        wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(infiles[parent_key])
+                    elif parent_key in new_outfiles:
+                        # this output was generated within same program/wrapper from other output files
+                        parents = []
+                        for outparent in outfiles[parent_key]:
+                            parents.append(miscutils.parse_fullname(outparent, miscutils.CU_PARSE_FILENAME))
+                        wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(parents)
+                    else:
+                        miscutils.fwdebug_print("parent_key = %s" % parent_key, WRAPPER_OUTPUT_PREFIX)
+                        miscutils.fwdebug_print("infiles.keys() = %s" % infiles.keys(),
+                                                WRAPPER_OUTPUT_PREFIX)
+                        miscutils.fwdebug_print("outfiles.keys() = %s" % outfiles.keys(),
+                                                WRAPPER_OUTPUT_PREFIX)
+                        miscutils.fwdebug_print("used = %s" % exwcl[intgdefs.IW_INPUTS],
+                                                WRAPPER_OUTPUT_PREFIX)
+                        miscutils.fwdie("ERROR: Could not find parent files for %s" % (dpair), 1)
+
+                    wdf[key][provdefs.PROV_CHILDREN] = provdefs.PROV_DELIM.join(new_outfiles[child_key])
                 if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                     miscutils.fwdebug_print("INFO: after wdf = %s" % prov[provdefs.PROV_WDF],
                                             WRAPPER_OUTPUT_PREFIX)
