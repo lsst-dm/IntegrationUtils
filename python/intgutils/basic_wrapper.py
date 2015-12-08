@@ -13,6 +13,7 @@ Contains definition of basic wrapper class
 
 import time
 import os
+import shlex
 import sys
 import subprocess
 import traceback
@@ -197,7 +198,7 @@ class BasicWrapper(object):
 
             cmd = "%s %s" % (execname, verflag)
             try:
-                process = subprocess.Popen(cmd.split(),
+                process = subprocess.Popen(shlex.split(cmd),
                                            shell=False,
                                            stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT)
@@ -206,7 +207,7 @@ class BasicWrapper(object):
                 print "********************"
                 print "Unexpected error: %s - %s" % (exc_type, exc_value)
                 print "cmd> %s" % cmd
-                print "Probably could not find %s in path" % cmd.split()[0]
+                print "Probably could not find %s in path" % shlex.split(cmd)[0]
                 print "Check for mispelled execname in submit wcl or"
                 print "    make sure that the corresponding eups package is in the metapackage "
                 print "    and it sets up the path correctly"
