@@ -578,8 +578,8 @@ class BasicWrapper(object):
                         if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                             miscutils.fwdebug_print("INFO: skipping missing optional output %s:%s" % (parent_sect, child_sect),
                                                     WRAPPER_OUTPUT_PREFIX)
-                        else:
-                            miscutils.fwdie("ERROR: Missing child output files in wdf tuple", 1)
+                    else:
+                        miscutils.fwdie("ERROR: Missing child output files in wdf tuple", 1)
                 else:
                     self.last_num_derived += 1
                     key = 'derived_%d' % self.last_num_derived
@@ -693,7 +693,8 @@ class BasicWrapper(object):
                                             WRAPPER_OUTPUT_PREFIX)
                 self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT][exlabel][ekey].extend(exlist)
             else:
-                miscutils.fwdebug_print("WARN: 0 output files in exlist for %s" % (exlabel))
+                miscutils.fwdebug_print("WARN: 0 output files in exlist for %s" % (exlabel),
+                                        WRAPPER_OUTPUT_PREFIX)
 
 
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
