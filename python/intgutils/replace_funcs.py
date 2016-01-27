@@ -135,8 +135,9 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
             elif len(parts) > 1:
                 prpat = "%%0%dd" % int(parts[1])
                 try:
-                    newval = prpat % int(replace_vars_single(newval, valdict, opts))
-                    keep[newvar] = newval
+                    keepval = replace_vars_single(newval, valdict, opts)
+                    keep[newvar] = keepval
+                    newval = prpat % int(keepval)
                 except (TypeError, ValueError) as err:
                     miscutils.fwdebug_print("\tError = %s" % str(err))
                     miscutils.fwdebug_print("\tprpat = %s" % prpat)
@@ -215,17 +216,22 @@ def replace_vars_loop(valpair, valdict, opts=None):
                 valsub = re.sub(r"(?i)\$LOOP\{%s\}" % var, nval, valpair[0])
                 keep = copy.deepcopy(valpair[1])
                 keep[newvar] = nval
-                miscutils.fwdebug(6, 'REPL_DEBUG', "\tafter loop sub: valsub=%s" % valsub)
+                if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+                    miscutils.fwdebug_print("\tafter loop sub: valsub=%s" % valsub)
                 if '$LOOP{' in valsub:
-                    miscutils.fwdebug(6, 'REPL_DEBUG', "\t\tputting back in todo list")
+                    if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+                        miscutils.fwdebug_print("\t\tputting back in todo list")
                     looptodo.append((valsub, keep))
                 else:
                     valuedone.append(valsub)
                     keepdone.append(keep)
-                    miscutils.fwdebug(6, 'REPL_DEBUG', "\t\tputting back in done list")
-        miscutils.fwdebug(6, 'REPL_DEBUG', "\tNumber in todo list = %s" % len(looptodo))
-        miscutils.fwdebug(6, 'REPL_DEBUG', "\tNumber in done list = %s" % len(valuedone))
-    miscutils.fwdebug(6, 'REPL_DEBUG', "\tEND OF WHILE LOOP = %s" % len(valuedone))
+                    if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+                        miscutils.fwdebug_print("\t\tputting back in done list")
+        if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+            miscutils.fwdebug_print("\tNumber in todo list = %s" % len(looptodo))
+            miscutils.fwdebug_print("\tNumber in done list = %s" % len(valuedone))
+    if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+        miscutils.fwdebug_print("\tEND OF WHILE LOOP = %s" % len(valuedone))
 
     return valuedone, keepdone
 
@@ -305,11 +311,11 @@ def replace_vars(instr, valdict, opts=None):
         valuedone, keepdone = replace_vars_loop(valpair, valdict, opts)
 
 
-    miscutils.fwdebug(6, 'REPL_DEBUG', "\tvaluedone = %s" % valuedone)
-    miscutils.fwdebug(6, 'REPL_DEBUG', "\tkeepdone = %s" % keepdone)
-    miscutils.fwdebug(6, 'REPL_DEBUG', "\tvaluepair = %s" % str(valpair))
-    miscutils.fwdebug(6, 'REPL_DEBUG', "\tinstr = %s" % instr)
-    miscutils.fwdebug(5, 'REPL_DEBUG', "END")
+    if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+        miscutils.fwdebug_print("\tvaluedone = %s" % valuedone)
+        miscutils.fwdebug_print("\tkeepdone = %s" % keepdone)
+        miscutils.fwdebug_print("\tvaluepair = %s" % str(valpair))
+        miscutils.fwdebug_print("\tinstr = %s" % instr)
 
     val2return = None
     if len(valuedone) >= 1:
@@ -317,5 +323,9 @@ def replace_vars(instr, valdict, opts=None):
     else:
         val2return = valpair
 
+    if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
+        miscutils.fwdebug_print("\tval2return = %s" % str(val2return))
+    if miscutils.fwdebug_check(5, 'REPL_DEBUG'):
+        miscutils.fwdebug_print("END")
     return val2return
 
