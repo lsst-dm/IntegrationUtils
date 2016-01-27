@@ -15,6 +15,10 @@ import despymisc.miscutils as miscutils
 def make_where_clause(dbh, key, value):
     """ return properly formatted string for a where clause """
 
+    if miscutils.fwdebug_check(1, 'PFWFILELIST_DEBUG'):
+        miscutils.fwdebug_print("key = %s" % (key))
+        miscutils.fwdebug_print("value = %s" % str(value))
+
     if ',' in value:
         value = value.replace(' ', '').split(',')
 
