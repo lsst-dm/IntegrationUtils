@@ -198,6 +198,7 @@ def replace_vars_loop(valpair, valdict, opts=None):
                 if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
                     miscutils.fwdebug_print("\tloop nv: nval=%s" % nval)
 
+                kval = nval    # save unpadded value for keep
                 if len(parts) > 1:
                     try:
                         prpat = "%%0%dd" % int(parts[1])
@@ -215,7 +216,7 @@ def replace_vars_loop(valpair, valdict, opts=None):
 
                 valsub = re.sub(r"(?i)\$LOOP\{%s\}" % var, nval, valpair[0])
                 keep = copy.deepcopy(valpair[1])
-                keep[newvar] = nval
+                keep[newvar] = kval
                 if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
                     miscutils.fwdebug_print("\tafter loop sub: valsub=%s" % valsub)
                 if '$LOOP{' in valsub:
