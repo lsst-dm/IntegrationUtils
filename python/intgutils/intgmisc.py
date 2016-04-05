@@ -23,8 +23,8 @@ def check_files(fullnames):
     missing = []
     for fname in fullnames:
         if os.path.exists(fname):
-            bname = miscutils.parse_fullname(fname, miscutils.CU_PARSE_BASENAME)
-            exists.append(bname)
+            #bname = miscutils.parse_fullname(fname, miscutils.CU_PARSE_BASENAME)
+            exists.append(fname)
         else:
             missing.append(fname)
     return (exists, missing)
@@ -153,6 +153,13 @@ def get_fullnames_from_listfile(listfile, linefmt, colstr):
 
                 # save each fullname in line
                 for pos in pos2fsect:
-                    fullnames[pos2fsect[pos]].append(lineinfo[pos])
+                    # use common routine to parse actual fullname (e.g., remove [0])
+                    (path, filename, compression) = miscutils.parse_fullname(lineinfo[pos], miscutils.CU_PARSE_PATH | miscutils.CU_PARSE_FILENAME | miscutils.CU_PARSE_COMPRESSION)
+                    fname = "%s/%s" % (path, filename) 
+                    if compression is not None:
+                        fname += compression
+                    fullnames[pos2fsect[pos]].append(fname)
 
+    if miscutils.fwdebug_check(6, 'INTGMISC_DEBUG'):
+        miscutils.fwdebug_print('fullnames = %s' % fullnames)
     return fullnames
