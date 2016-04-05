@@ -4,6 +4,8 @@
 # $LastChangedBy::                        $:  # Author of last commit.
 # $LastChangedDate::                      $:  # Date of last commit.
 
+""" Functions useful for query codes to be called by framework """
+
 import re
 import json
 
@@ -174,7 +176,8 @@ def convert_single_files_to_lines(filelist, initcnt=1):
     count = initcnt
     linedict = {'list': {}}
 
-    if type(filelist) is dict and len(filelist) > 1:
+    if type(filelist) is dict and len(filelist) > 1 and \
+            'filename' not in filelist.keys():
         filelist = filelist.values()
     elif type(filelist) is dict:  # single file
         filelist = [filelist]
@@ -187,6 +190,23 @@ def convert_single_files_to_lines(filelist, initcnt=1):
         count += 1
     return linedict
 
+###########################################################
+def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
+    """ Convert list of list of file dictionaries to dict of lines
+        in prep for output for framework
+        (filelist = [ [ {file 1 dict} {file 2 dict} ] [ { file 1 dict}..."""
+
+    lcnt = initcnt
+    lines = {'list': {intgdefs.LISTENTRY: {}}}
+    for oneline in filelist:
+        lname = "line%05d" % (lcnt)
+        fsect = {}
+        assert len(filelabels) == len(oneline)
+        for fcnt in range(0, len(filelabels)):
+            fsect[filelabels[fcnt]] = oneline[fcnt]
+        lines['list'][intgdefs.LISTENTRY][lname] = {'file': fsect}
+        lcnt += 1
+    return lines
 
 ###########################################################
 def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT):
