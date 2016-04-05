@@ -92,6 +92,7 @@ class WCL(OrderedDict):
             miscutils.fwdebug_print("\tinitial key = '%s'" % key)
             miscutils.fwdebug_print("\tinitial opts = '%s'" % opt)
 
+        curvals = None
         found = False
         value = ''
         if hasattr(key, 'lower'):
