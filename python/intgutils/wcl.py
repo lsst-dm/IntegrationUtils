@@ -18,6 +18,7 @@ import sys
 import re
 import os
 from collections import OrderedDict
+from importlib import import_module
 import copy
 
 
@@ -280,6 +281,34 @@ class WCL(OrderedDict):
                     with open(filename2, "r") as wclfh:
                         wclobj2.read(wclfh, cmdline, filename2)
                     self.update(wclobj2)
+                    line = in_file.readline()
+                    linecnt += 1
+                    continue
+
+                # handle calls to external functions to get more information usually from db
+                patmatch = re.search(r"<<inclfunc ([^>]+)>>", line)
+                if patmatch is not None:
+                    if miscutils.fwdebug_check(9, "WCL_DEBUG"):
+                        miscutils.fwdebug_print("patmatch=%s" % patmatch.group(0))
+                    funcmatch = re.match('([^(]+)\(([^)]+)\)', patmatch.group(1))
+                    if funcmatch:
+                        if miscutils.fwdebug_check(9, "WCL_DEBUG"):
+                            miscutils.fwdebug_print("funcmatch keys=%s" % funcmatch.group(2))
+                            miscutils.fwdebug_print("funcmatch funcname=%s" % funcmatch.group(1))
+                        keys = miscutils.fwsplit(funcmatch.group(2), ',')
+                        argd = {}
+                        for k in keys:
+                            argd[k] = self.getfull(k)
+
+                        p, m = funcmatch.group(1).rsplit('.', 1)
+                        mod = import_module(p)
+                        get_info_func = getattr(mod, m)
+                        newinfo = get_info_func(argd)
+                        self.update(newinfo)
+                    else:
+                        raise SyntaxError('File %s Line %d - Error:  Invalid inclfunc %s' %
+                                          (filename, linecnt, patmatch))
+
                     line = in_file.readline()
                     linecnt += 1
                     continue
