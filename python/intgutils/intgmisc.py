@@ -264,7 +264,6 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
         if intgdefs.IW_OUTPUTS in exwcl:
             for sect in miscutils.fwsplit(exwcl[intgdefs.IW_OUTPUTS], ','):
                 sectkeys = sect.split('.')
-                print "sectkeys = ", sectkeys
                 outset = None
                 if sectkeys[0] == intgdefs.IW_FILE_SECT:
                     outset = get_file_fullnames(sect, modwcl[intgdefs.IW_FILE_SECT], fullwcl)
