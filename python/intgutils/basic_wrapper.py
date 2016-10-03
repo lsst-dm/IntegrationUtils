@@ -72,7 +72,9 @@ class BasicWrapper(object):
                 if 'task_info' in self.outputwcl[ekey]:
                     for taskd in self.outputwcl[ekey]['task_info'].values():
                         if 'status' in taskd:
-                            if taskd['status'] > 0:
+                            if taskd['status'] != 0:
+                                if taskd['status'] == -11:
+                                    print "SEGMENTATION FAULT"
                                 status = taskd['status']
                         else:
                             if miscutils.fwdebug_check(3, "BASICWRAP_DEBUG"):
