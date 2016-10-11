@@ -214,7 +214,7 @@ def get_list_fullnames(sect, modwcl):
             miscutils.fwdebug_print("ERROR: Could not find sect %s in list" % (filesect))
             miscutils.fwdebug_print("\tcolumns = %s" % (columns))
             miscutils.fwdebug_print("\tlist keys = %s" % (fullnames.keys()))
-        else:
+        elif miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
             miscutils.fwdebug_print("WARN: Could not find sect %s in fullname list.   Not a problem if list (sect) has only data." % (filesect))
     else:
         setfnames = set(fullnames[filesect])
