@@ -5,6 +5,11 @@ IntegrationUtils
 This package provides the utilities to read/parse WCL files, wrap, and run
 tasks.
 
+.. warning::
+
+   The package is a prototype and as such is subject to change and does not
+   meet LSST coding standards.
+
 ****
 
 This code is part of the Dark Energy Survey (DES) Data Management System
