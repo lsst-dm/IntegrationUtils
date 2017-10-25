@@ -14,6 +14,8 @@ import intgutils.intgdefs as intgdefs
 import despymisc.miscutils as miscutils
 
 ###########################################################
+
+
 def make_where_clause(dbh, key, value):
     """ return properly formatted string for a where clause """
 
@@ -76,7 +78,6 @@ def make_where_clause(dbh, key, value):
     return condition
 
 
-
 ###########################################################
 # qdict[<table>][key_vals][<key>]
 def create_query_string(dbh, qdict):
@@ -120,9 +121,9 @@ def create_query_string(dbh, qdict):
                     whereclauses.append('%s.%s=%s' % (jtable, key, val))
 
     query = "SELECT %s FROM %s WHERE %s" % \
-                (','.join(selectfields),
-                 ','.join(fromtables),
-                 ' AND '.join(whereclauses))
+        (','.join(selectfields),
+         ','.join(fromtables),
+         ' AND '.join(whereclauses))
     return query
 
 
@@ -191,6 +192,8 @@ def convert_single_files_to_lines(filelist, initcnt=1):
     return linedict
 
 ###########################################################
+
+
 def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
     """ Convert list of list of file dictionaries to dict of lines
         in prep for output for framework
@@ -209,6 +212,8 @@ def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
     return lines
 
 ###########################################################
+
+
 def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT):
     """ Writes dataset to file in specified output format """
 
@@ -253,7 +258,6 @@ def output_lines_wcl(filename, dataset):
 
 ###########################################################
 def output_lines_json(filename, dataset):
-
     """ Writes dataset to file in json format """
     with open(filename, "w") as jsonfh:
         json.dump(dataset, jsonfh, indent=4, separators=(',', ': '))

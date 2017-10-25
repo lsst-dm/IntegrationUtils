@@ -26,6 +26,7 @@ import despymisc.miscutils as miscutils
 import intgutils.intgdefs as intgdefs
 import intgutils.replace_funcs as replfuncs
 
+
 class WCL(OrderedDict):
     """ Base WCL class """
 
@@ -40,7 +41,6 @@ class WCL(OrderedDict):
         """ Set the search order """
 
         self.search_order = search_order
-
 
     ###########################################################################
     def __contains__(self, key, opts=None):
@@ -63,7 +63,6 @@ class WCL(OrderedDict):
     #    """ x.__setitem__(i, y) <==> x[i]=y """
     #    OrderedDict.__setitem__(self, key, val)
 
-
     ###########################################################################
     def set(self, key, val):
         """ Sets value of key in wcl, follows section notation """
@@ -81,8 +80,6 @@ class WCL(OrderedDict):
 
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("END")
-
-
 
     ###########################################################################
     def search(self, key, opt=None):
@@ -167,7 +164,6 @@ class WCL(OrderedDict):
                     found = True
                     value = OrderedDict.__getitem__(self, key)
 
-
         if not found and opt and 'required' in opt and opt['required']:
             print "\n\nError: search for %s failed" % (key)
             print "\tcurrent = ", OrderedDict.__getitem__(self, 'current')
@@ -180,7 +176,6 @@ class WCL(OrderedDict):
             miscutils.fwdebug_print("\tEND: found=%s, value=%s" % (found, value))
 
         return found, value
-
 
     #######################################################################
     @classmethod
@@ -204,15 +199,12 @@ class WCL(OrderedDict):
             else:
                 if miscutils.fwdebug_check(9, "WCL_DEBUG"):
                     miscutils.fwdebug_print("Note: wcl is not string.")
-                    miscutils.fwdebug_print("\tkey = %s, type(val) = %s, val = '%s'" % \
+                    miscutils.fwdebug_print("\tkey = %s, type(val) = %s, val = '%s'" %
                                             (key, type(val), val))
 
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("END")
         return usedvars
-
-
-
 
     #######################################################################
     def write(self, out_file=None, sortit=False, indent=4):
@@ -223,7 +215,6 @@ class WCL(OrderedDict):
             out_file = sys.stdout
 
         self._recurs_write_wcl(self, out_file, sortit, indent, 0)
-
 
     def _recurs_write_wcl(self, wcl_dict, out_file, sortit, inc_indent, curr_indent):
         """Internal recursive function to do actual WCL writing"""
@@ -246,7 +237,6 @@ class WCL(OrderedDict):
                 elif value is not None:
                     print >> out_file, ' ' * curr_indent + "%s = %s" % (str(key), str(value))
 
-
     def read(self, in_file=None, cmdline=False, filename='stdin'):
         """Reads WCL text from an open file object and returns a dictionary"""
 
@@ -260,7 +250,7 @@ class WCL(OrderedDict):
         while line:
             line = line.strip()
             while line.endswith('\\'):
-                linecnt +=1
+                linecnt += 1
                 line = line[:-1] + in_file.readline().strip()
 
             # delete comments
@@ -344,7 +334,7 @@ class WCL(OrderedDict):
                             self._print_stack(stackkeys, stack)
 
                             raise SyntaxError('File %s Line %d - Error:  Invalid or missing section'
-                                              'close.   Got close for %s. Expecting close for %s.' % \
+                                              'close.   Got close for %s. Expecting close for %s.' %
                                               (filename, linecnt, key, stackkeys[len(stackkeys) - 2]))
                     else:
                         print "******************************"
@@ -353,7 +343,7 @@ class WCL(OrderedDict):
                         print "Closing Key =", key
                         self._print_stack(stackkeys, stack)
                         raise SyntaxError('File %s Line %d - Error:  Invalid or missing section'
-                                          'close.   Got close for %s. Expecting close for %s.' % \
+                                          'close.   Got close for %s. Expecting close for %s.' %
                                           (filename, linecnt, key, stackkeys[len(stackkeys) - 1]))
 
                     line = in_file.readline()
@@ -373,7 +363,7 @@ class WCL(OrderedDict):
                         print "Opening Key =", key
                         self._print_stack(stackkeys, stack)
                         raise SyntaxError('File %s Line %d - Error:  found '
-                                          'child section with same name (%s)' % \
+                                          'child section with same name (%s)' %
                                           (filename, linecnt, key))
 
                     stackkeys.append(key)
@@ -464,7 +454,7 @@ class WCL(OrderedDict):
                miscutils.convertBool(newopts[intgdefs.REPLACE_VARS]):
                 newopts['expand'] = True
                 if miscutils.fwdebug_check(9, "WCL_DEBUG"):
-                    miscutils.fwdebug_print("calling replace_vars value=%s, opts=%s" % \
+                    miscutils.fwdebug_print("calling replace_vars value=%s, opts=%s" %
                                             (value, newopts))
 
                 (value, _) = replfuncs.replace_vars(value, self, newopts)
