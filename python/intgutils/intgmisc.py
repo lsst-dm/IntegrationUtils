@@ -53,7 +53,7 @@ def get_cmd_hyphen(hyphen_type, cmd_option):
 def get_exec_sections(wcl, prefix):
     """ Returns exec sections appearing in given wcl """
     execs = {}
-    for key, val in wcl.items():
+    for key, val in list(wcl.items()):
         if miscutils.fwdebug_check(3, "DEBUG"):
             miscutils.fwdebug_print("\tsearching for exec prefix in %s" % key)
 
@@ -210,7 +210,7 @@ def get_list_fullnames(sect, modwcl):
         if hasfullname:
             miscutils.fwdebug_print("ERROR: Could not find sect %s in list" % (filesect))
             miscutils.fwdebug_print("\tcolumns = %s" % (columns))
-            miscutils.fwdebug_print("\tlist keys = %s" % (fullnames.keys()))
+            miscutils.fwdebug_print("\tlist keys = %s" % (list(fullnames.keys())))
         elif miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
             miscutils.fwdebug_print(
                 "WARN: Could not find sect %s in fullname list.   Not a problem if list (sect) has only data." % (filesect))
@@ -267,9 +267,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
                 elif sectkeys[0] == intgdefs.IW_LIST_SECT:
                     listname, outset = get_list_fullnames(sect, modwcl)
                 else:
-                    print "exwcl[intgdefs.IW_OUTPUTS]=", exwcl[intgdefs.IW_OUTPUTS]
-                    print "sect = ", sect
-                    print "sectkeys = ", sectkeys
+                    print("exwcl[intgdefs.IW_OUTPUTS]=", exwcl[intgdefs.IW_OUTPUTS])
+                    print("sect = ", sect)
+                    print("sectkeys = ", sectkeys)
                     raise KeyError("Unknown data section %s" % sectkeys[0])
                 outputs[sect] = outset
                 allouts.union(outset)
@@ -287,9 +287,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
                     listname, inset = get_list_fullnames(sect, modwcl)
                     #inset.add(listname)
                 else:
-                    print "exwcl[intgdefs.IW_INPUTS]=", exwcl[intgdefs.IW_INPUTS]
-                    print "sect = ", sect
-                    print "sectkeys = ", sectkeys
+                    print("exwcl[intgdefs.IW_INPUTS]=", exwcl[intgdefs.IW_INPUTS])
+                    print("sect = ", sect)
+                    print("sectkeys = ", sectkeys)
                     raise KeyError("Unknown data section %s" % sectkeys[0])
 
                 # exclude intermediate files from inputs

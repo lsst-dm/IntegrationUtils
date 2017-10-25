@@ -82,9 +82,9 @@ def create_query_string(dbh, qdict):
     fromtables = []
     whereclauses = []
 
-    print qdict
+    print(qdict)
 
-    for tablename, tabledict in qdict.items():
+    for tablename, tabledict in list(qdict.items()):
         fromtables.append(tablename)
         if 'select_fields' in tabledict:
             table_select_fields = tabledict['select_fields']
@@ -98,7 +98,7 @@ def create_query_string(dbh, qdict):
                     selectfields.append("%s.%s" % (tablename, field))
 
         if 'key_vals' in tabledict:
-            for key, val in tabledict['key_vals'].items():
+            for key, val in list(tabledict['key_vals'].items()):
                 whereclauses.append(make_where_clause(dbh, '%s.%s' % (tablename, key), val))
 
         if 'join' in tabledict:
@@ -128,7 +128,7 @@ def gen_file_query(dbh, query, debug=3):
 
     sql = create_query_string(dbh, query)
     if debug >= 3:
-        print "sql =", sql
+        print("sql =", sql)
 
     curs = dbh.cursor()
     curs.execute(sql)
@@ -136,7 +136,7 @@ def gen_file_query(dbh, query, debug=3):
 
     result = []
     for line in curs:
-        linedict = dict(zip(desc, line))
+        linedict = dict(list(zip(desc, line)))
         result.append(linedict)
 
     curs.close()
@@ -152,7 +152,7 @@ def gen_file_list(dbh, query, debug=3):
 #    query['location']['hash_key'] = 'id'
 
     if debug:
-        print "gen_file_list: calling gen_file_query with", query
+        print("gen_file_list: calling gen_file_query with", query)
 
     results = gen_file_query(dbh, query)
 
@@ -173,8 +173,8 @@ def convert_single_files_to_lines(filelist, initcnt=1):
     linedict = {'list': {}}
 
     if type(filelist) is dict and len(filelist) > 1 and \
-            'filename' not in filelist.keys():
-        filelist = filelist.values()
+            'filename' not in list(filelist.keys()):
+        filelist = list(filelist.values())
     elif type(filelist) is dict:  # single file
         filelist = [filelist]
 
@@ -228,11 +228,11 @@ def output_lines_xml(filename, dataset):
 
     with open(filename, 'w') as xmlfh:
         xmlfh.write("<list>\n")
-        for datak, line in dataset.items():
+        for datak, line in list(dataset.items()):
             xmlfh.write("\t<line>\n")
-            for name, filedict in line.items():
+            for name, filedict in list(line.items()):
                 xmlfh.write("\t\t<file nickname='%s'>\n" % name)
-                for key, val in filedict.items():
+                for key, val in list(filedict.items()):
                     if key.lower() == 'ccd':
                         val = "%02d" % (val)
                     xmlfh.write("\t\t\t<%s>%s</%s>" % (datak, val, datak))

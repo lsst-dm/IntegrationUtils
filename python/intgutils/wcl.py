@@ -91,7 +91,7 @@ class WCL(OrderedDict):
         if hasattr(key, 'lower'):
             key = key.lower()
         else:
-            print "key = %s" % key
+            print("key = %s" % key)
 
         # if key contains period, use it exactly instead of scoping rules
         if isinstance(key, str) and '.' in key:
@@ -122,7 +122,7 @@ class WCL(OrderedDict):
 
             # override with current values passed into function if given
             if opt is not None and 'currentvals' in opt:
-                for ckey, cval in opt['currentvals'].items():
+                for ckey, cval in list(opt['currentvals'].items()):
                     if miscutils.fwdebug_check(8, 'WCL_DEBUG'):
                         miscutils.fwdebug_print("using specified curval %s = %s" % (ckey, cval))
                     curvals[ckey] = cval
@@ -160,11 +160,11 @@ class WCL(OrderedDict):
                     value = OrderedDict.__getitem__(self, key)
 
         if not found and opt and 'required' in opt and opt['required']:
-            print "\n\nError: search for %s failed" % (key)
-            print "\tcurrent = ", OrderedDict.__getitem__(self, 'current')
-            print "\topt = ", opt
-            print "\tcurvals = ", curvals
-            print "\n\n"
+            print("\n\nError: search for %s failed" % (key))
+            print("\tcurrent = ", OrderedDict.__getitem__(self, 'current'))
+            print("\topt = ", opt)
+            print("\tcurvals = ", curvals)
+            print("\n\n")
             raise KeyError("Error: Search failed (%s)" % key)
 
         if miscutils.fwdebug_check(8, 'WCL_DEBUG'):
@@ -180,7 +180,7 @@ class WCL(OrderedDict):
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("BEG")
         usedvars = {}
-        for key, val in wcl.items():
+        for key, val in list(wcl.items()):
             if type(val) is dict or type(val) is OrderedDict:
                 uvars = cls.search_wcl_for_variables(val)
                 if uvars is not None:
@@ -217,20 +217,20 @@ class WCL(OrderedDict):
             if sortit:
                 dictitems = sorted(wcl_dict.items())
             else:
-                dictitems = wcl_dict.items()
+                dictitems = list(wcl_dict.items())
 
             for key, value in dictitems:
                 if isinstance(value, dict):
-                    print >> out_file, ' ' * curr_indent + "<" + str(key) + ">"
+                    print(' ' * curr_indent + "<" + str(key) + ">", file=out_file)
                     save_sortit = sortit
                     if key == 'cmdline':
                         sortit = False    # don't sort cmdline section
                     self._recurs_write_wcl(value, out_file, sortit, inc_indent,
                                            curr_indent + inc_indent)
                     sortit = save_sortit
-                    print >> out_file, ' ' * curr_indent + "</" + str(key) + ">"
+                    print(' ' * curr_indent + "</" + str(key) + ">", file=out_file)
                 elif value is not None:
-                    print >> out_file, ' ' * curr_indent + "%s = %s" % (str(key), str(value))
+                    print(' ' * curr_indent + "%s = %s" % (str(key), str(value)), file=out_file)
 
     def read(self, in_file=None, cmdline=False, filename='stdin'):
         """Reads WCL text from an open file object and returns a dictionary"""
@@ -322,20 +322,20 @@ class WCL(OrderedDict):
                             stack.pop()
                             curr = stack[len(stack)-1]
                         else:
-                            print "******************************"
-                            print "Linecnt =", linecnt
-                            print "Line =", line.strip()
-                            print "Closing Key =", key
+                            print("******************************")
+                            print("Linecnt =", linecnt)
+                            print("Line =", line.strip())
+                            print("Closing Key =", key)
                             self._print_stack(stackkeys, stack)
 
                             raise SyntaxError('File %s Line %d - Error:  Invalid or missing section'
                                               'close.   Got close for %s. Expecting close for %s.' %
                                               (filename, linecnt, key, stackkeys[len(stackkeys) - 2]))
                     else:
-                        print "******************************"
-                        print "Linecnt =", linecnt
-                        print "Line =", line.strip()
-                        print "Closing Key =", key
+                        print("******************************")
+                        print("Linecnt =", linecnt)
+                        print("Line =", line.strip())
+                        print("Closing Key =", key)
                         self._print_stack(stackkeys, stack)
                         raise SyntaxError('File %s Line %d - Error:  Invalid or missing section'
                                           'close.   Got close for %s. Expecting close for %s.' %
@@ -352,10 +352,10 @@ class WCL(OrderedDict):
 
                     # check for case where missing / when closing section
                     if key == stackkeys[-1]:
-                        print "******************************"
-                        print "Linecnt =", linecnt
-                        print "Line =", line.strip()
-                        print "Opening Key =", key
+                        print("******************************")
+                        print("Linecnt =", linecnt)
+                        print("Line =", line.strip())
+                        print("Opening Key =", key)
                         self._print_stack(stackkeys, stack)
                         raise SyntaxError('File %s Line %d - Error:  found '
                                           'child section with same name (%s)' %
@@ -407,8 +407,8 @@ class WCL(OrderedDict):
                     linecnt += 1
                     continue
 
-                print "Warning: Ignoring line #%d (did not match patterns):" % linecnt
-                print line
+                print("Warning: Ignoring line #%d (did not match patterns):" % linecnt)
+                print(line)
 
             # goto next line if no matches
             line = in_file.readline()
@@ -417,8 +417,8 @@ class WCL(OrderedDict):
         # done parsing input, should only be main dict in stack
         if len(stack) != 1 or len(stackkeys) != 1:
             self._print_stack(stackkeys, stack)
-            print "File %s - Error parsing wcl_file." % filename
-            print "Check that all sections have closing line."
+            print("File %s - Error parsing wcl_file." % filename)
+            print("Check that all sections have closing line.")
             raise SyntaxError("File %s - missing section closing line." % filename)
 
     ############################################################
@@ -438,7 +438,7 @@ class WCL(OrderedDict):
         (found, value) = self.search(key, opts)
         if not found:
             value = default
-        elif isinstance(value, (str, unicode)):
+        elif isinstance(value, str):
             if opts is None:
                 newopts = {'expand': True,
                            intgdefs.REPLACE_VARS: True}
@@ -462,18 +462,18 @@ class WCL(OrderedDict):
     @classmethod
     def _print_stack(cls, stackkeys, stack):
         """ Print stackkeys and stack for debugging """
-        print "----- STACK -----"
+        print("----- STACK -----")
         if len(stackkeys) != len(stack):
-            print "\tWarning: stackkeys and stack not same length"
+            print("\tWarning: stackkeys and stack not same length")
         for i in range(0, max(len(stackkeys), len(stack))):
             skey = None
             stackinfo = None
             if i < len(stackkeys):
                 skey = stackkeys[i]
             if i < len(stack):
-                stackinfo = stack[i].keys()
-            print "\t%d: %s = %s" % (i, skey, stackinfo)
-        print "\n\n"
+                stackinfo = list(stack[i].keys())
+            print("\t%d: %s = %s" % (i, skey, stackinfo))
+        print("\n\n")
 
 
 def run_test():
@@ -493,7 +493,7 @@ def run_test():
     try:
         testwcl.read(test_wcl_fh, filename=test_fname)
     except SyntaxError as err:
-        print err
+        print(err)
         sys.exit(1)
 
     test_wcl_fh.close()
