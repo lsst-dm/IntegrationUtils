@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-""" Generic wrapper """
+"""Generic wrapper.
+"""
 
 import sys
 import argparse
@@ -9,8 +10,8 @@ import intgutils.basic_wrapper as basic_wrapper
 
 
 def main():
-    """ entry point """
-
+    """Entry point.
+    """
     parser = argparse.ArgumentParser(description='Generic wrapper')
     parser.add_argument('inputwcl', nargs=1, action='store')
     args = parser.parse_args(sys.argv[1:])

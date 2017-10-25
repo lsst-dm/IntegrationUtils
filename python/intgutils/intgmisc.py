@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Contains misc integration utilities
+"""Contains misc integration utilities.
 """
 
 import shlex
@@ -13,10 +12,9 @@ from intgutils import intgdefs
 import intgutils.replace_funcs as replfuncs
 
 
-######################################################################
 def check_files(fullnames):
-    """ Check whether given files do exist on disk """
-
+    """Check whether given files do exist on disk.
+    """
     exists = []
     missing = []
     for fname in fullnames:
@@ -27,10 +25,9 @@ def check_files(fullnames):
     return (exists, missing)
 
 
-#######################################################################
 def get_cmd_hyphen(hyphen_type, cmd_option):
-    """ Determine correct hyphenation for command line argument """
-
+    """Determine correct hyphenation for command line argument.
+    """
     hyphen = '-'
 
     if hyphen_type == 'alldouble':
@@ -47,11 +44,10 @@ def get_cmd_hyphen(hyphen_type, cmd_option):
 
     return hyphen
 
-#######################################################################
-
 
 def get_exec_sections(wcl, prefix):
-    """ Returns exec sections appearing in given wcl """
+    """Returns exec sections appearing in given wcl.
+    """
     execs = {}
     for key, val in list(wcl.items()):
         if miscutils.fwdebug_check(3, "DEBUG"):
@@ -64,10 +60,9 @@ def get_exec_sections(wcl, prefix):
     return execs
 
 
-#######################################################################
 def run_exec(cmd):
-    """ Run an executable with given command returning process information """
-
+    """Run an executable with given command returning process information.
+    """
     procfields = ['ru_idrss', 'ru_inblock', 'ru_isrss', 'ru_ixrss',
                   'ru_majflt', 'ru_maxrss', 'ru_minflt', 'ru_msgrcv',
                   'ru_msgsnd', 'ru_nivcsw', 'ru_nsignals', 'ru_nswap',
@@ -82,10 +77,9 @@ def run_exec(cmd):
     return (retcode, procinfo)
 
 
-#######################################################################
 def remove_column_format(columns):
-    """ Return columns minus any formatting specification """
-
+    """Return columns minus any formatting specification.
+    """
     columns2 = []
     for col in columns:
         if col.startswith('$FMT{'):
@@ -99,9 +93,9 @@ def remove_column_format(columns):
     return columns2
 
 
-#######################################################################
 def convert_col_string_to_list(colstr, with_format=True):
-    """ convert a string of columns to list of columns """
+    """Convert a string of columns to list of columns.
+    """
     columns = re.findall(r'\$\S+\{.*\}|[^,\s]+', colstr)
 
     if not with_format:
@@ -109,10 +103,9 @@ def convert_col_string_to_list(colstr, with_format=True):
     return columns
 
 
-#######################################################################
 def read_fullnames_from_listfile(listfile, linefmt, colstr):
-    """ Read a list file returning fullnames from the list """
-
+    """Read a list file returning fullnames from the list.
+    """
     if miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
         miscutils.fwdebug_print('colstr=%s' % colstr)
 
@@ -169,9 +162,9 @@ def read_fullnames_from_listfile(listfile, linefmt, colstr):
     return fullnames
 
 
-######################################################################
 def get_list_fullnames(sect, modwcl):
-
+    """
+    """
     (_, listsect, filesect) = sect.split('.')
     ldict = modwcl[intgdefs.IW_LIST_SECT][listsect]
 
@@ -219,9 +212,9 @@ def get_list_fullnames(sect, modwcl):
     return listname, setfnames
 
 
-######################################################################
 def get_file_fullnames(sect, filewcl, fullwcl):
-
+    """
+    """
     sectkeys = sect.split('.')
     sectname = sectkeys[1]
 
@@ -240,10 +233,9 @@ def get_file_fullnames(sect, filewcl, fullwcl):
     return set(fnames)
 
 
-######################################################################
 def get_fullnames(modwcl, fullwcl, exsect=None):
-    """ Return dictionaries of input and output fullnames by section """
-
+    """Return dictionaries of input and output fullnames by section.
+    """
     exec_sectnames = []
     if exsect is None:
         exec_sectnames = get_exec_sections(modwcl, intgdefs.IW_EXEC_PREFIX)
@@ -300,10 +292,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
     return inputs, outputs
 
 
-######################################################################
 #def check_list(sect, listwcl, filewcl):
-#    """ Check that list and files inside list exist """
-#
+#    """Check that list and files inside list exist.
+#    """
 #    existfiles = {}
 #    missingfiles = []
 #    (_, listsect, filesect) = sect.split('.')
@@ -341,9 +332,10 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
 #    return list_filename, existfiles, missingfiles
 #
 
-######################################################################
 #def check_input_list(sect, listwcl, filewcl):
-#    """ Check that the list and contained files for a single input list section exist """
+#    """Check that the list and contained files for a single input list
+#       section exist.
+#    """
 #
 #    if miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
 #        miscutils.fwdebug_print("INFO: Beg sect=%s" % sect)
@@ -358,20 +350,18 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
 #
 
 
-######################################################################
 def check_input_files(sect, filewcl):
-    """ Check that the files for a single input file section exist """
-
+    """Check that the files for a single input file section exist.
+    """
     sectkeys = sect.split('.')
     fnames = miscutils.fwsplit(filewcl[sectkeys[1]]['fullname'], ',')
     (exists1, missing1) = check_files(fnames)
     return (exists1, missing1)
 
 
-######################################################################
 #def check_exec_inputs(exwcl, listwcl, filewcl):
-#    """ Check that inputs exist for module exec """
-#
+#    """Check that inputs exist for module exec.
+#    """
 #    already_checked_list = {}
 #    existfiles = {}
 #    missingfiles = []

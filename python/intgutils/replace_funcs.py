@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# pylint: disable=print-statement
 
-""" Functions to replace variables in a string with their values from a isinstance(dict) object """
+"""Functions to replace variables in a string with their values from a dict.
+"""
 
 import copy
 import re
@@ -13,8 +13,8 @@ import despyfitsutils.fitsutils as fitsutils
 
 
 def replace_vars_single(instr, valdict, opts=None):
-    """ Return single instr after replacing vars """
-
+    """Return single instr after replacing vars.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 
@@ -36,8 +36,8 @@ def replace_vars_single(instr, valdict, opts=None):
 
 
 def replace_vars_type(instr, valdict, required, stype, opts=None):
-    """ Search given string for variables of 1 type and replace """
-
+    """Search given string for variables of 1 type and replace.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 
@@ -157,8 +157,8 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
 
 
 def replace_vars_loop(valpair, valdict, opts=None):
-    """ Expand variables that have multiple values (e.g., band, ccdnum) """
-
+    """Expand variables that have multiple values (e.g., band, ccdnum).
+    """
     #assert(isinstance(valdict, dict))
 
     looptodo = [valpair]
@@ -234,8 +234,8 @@ def replace_vars_loop(valpair, valdict, opts=None):
 
 
 def replace_vars(instr, valdict, opts=None):
-    """ Replace variables in given instr """
-
+    """Replace variables in given instr.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-# pylint: disable=print-statement
 
-"""
-Contains utilities for use with the Workflow Control Language
+"""Contains utilities for use with the Workflow Control Language.
 """
 
 # Notes:
@@ -23,45 +21,41 @@ import intgutils.replace_funcs as replfuncs
 
 
 class WCL(OrderedDict):
-    """ Base WCL class """
+    """Base WCL class.
+    """
 
     def __init__(self, *args, **kwds):
-        """ Initialize with given wcl """
-
+        """Initialize with given wcl.
+        """
         OrderedDict.__init__(self, *args, **kwds)
         self.search_order = OrderedDict()
 
-    ###########################################################################
     def set_search_order(self, search_order):
-        """ Set the search order """
-
+        """Set the search order.
+        """
         self.search_order = search_order
 
-    ###########################################################################
     def __contains__(self, key, opts=None):
-        """ D.__contains__(k) -> True if D has a key k, else False """
+        """D.__contains__(k) -> True if D has a key k, else False.
+        """
         (found, _) = self.search(key, opts)
         return found
 
-    ###########################################################################
     def get(self, key, opts=None, default=None):
-        """ Gets value of key in wcl, follows search order and section notation """
-
+        """Gets value of key in wcl, follows search order and section notation.
+        """
         (found, value) = self.search(key, opts)
         if not found:
             value = default
-
         return value
 
-    ###########################################################################
     #def __setitem__(self, key, val):
     #    """ x.__setitem__(i, y) <==> x[i]=y """
     #    OrderedDict.__setitem__(self, key, val)
 
-    ###########################################################################
     def set(self, key, val):
-        """ Sets value of key in wcl, follows section notation """
-
+        """Sets value of key in wcl, follows section notation.
+        """
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("BEG key=%s, val=%s" % (key, val))
 
@@ -76,10 +70,9 @@ class WCL(OrderedDict):
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("END")
 
-    ###########################################################################
     def search(self, key, opt=None):
-        """ Searches for key using given opt following hierarchy rules """
-
+        """Searches for key using given opt following hierarchy rules.
+        """
         if miscutils.fwdebug_check(8, 'WCL_DEBUG'):
             miscutils.fwdebug_print("\tBEG")
             miscutils.fwdebug_print("\tinitial key = '%s'" % key)
@@ -172,11 +165,10 @@ class WCL(OrderedDict):
 
         return found, value
 
-    #######################################################################
     @classmethod
     def search_wcl_for_variables(cls, wcl):
-        """ Search the wcl for variables """
-
+        """Search the wcl for variables.
+        """
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("BEG")
         usedvars = {}
@@ -201,18 +193,19 @@ class WCL(OrderedDict):
             miscutils.fwdebug_print("END")
         return usedvars
 
-    #######################################################################
     def write(self, out_file=None, sortit=False, indent=4):
-        """Outputs a given dictionary in WCL format where items within
-           the same sub-dictionary are output in alphabetical order"""
+        """Output a given dictionary in WCL format.
 
+        Items within the same sub-dictionary are output in alphabetical order.
+        """
         if out_file is None:
             out_file = sys.stdout
 
         self._recurs_write_wcl(self, out_file, sortit, indent, 0)
 
     def _recurs_write_wcl(self, wcl_dict, out_file, sortit, inc_indent, curr_indent):
-        """Internal recursive function to do actual WCL writing"""
+        """Internal recursive function to do actual WCL writing.
+        """
         if len(wcl_dict) > 0:
             if sortit:
                 dictitems = sorted(wcl_dict.items())
@@ -233,8 +226,8 @@ class WCL(OrderedDict):
                     print(' ' * curr_indent + "%s = %s" % (str(key), str(value)), file=out_file)
 
     def read(self, in_file=None, cmdline=False, filename='stdin'):
-        """Reads WCL text from an open file object and returns a dictionary"""
-
+        """Reads WCL text from an open file object and returns a dictionary.
+        """
         curr = self
         stack = []  # to keep track of current sub-dictionary
         stackkeys = ['__topwcl__']  # to keep track of current section key
@@ -421,15 +414,14 @@ class WCL(OrderedDict):
             print("Check that all sections have closing line.")
             raise SyntaxError("File %s - missing section closing line." % filename)
 
-    ############################################################
     def update(self, udict):
-        """ update allowing for nested dictionaries """
+        """Update allowing for nested dictionaries.
+        """
         miscutils.updateOrderedDict(self, udict)
 
-    ###########################################################################
     def getfull(self, key, opts=None, default=None):
-        """ Return with variables replaced and expanded if string(s) """
-
+        """Return with variables replaced and expanded if string(s).
+        """
         if miscutils.fwdebug_check(9, "WCL_DEBUG"):
             miscutils.fwdebug_print("BEG - key=%s" % key)
             miscutils.fwdebug_print("default - %s" % default)
@@ -458,10 +450,10 @@ class WCL(OrderedDict):
 
         return value
 
-    ############################################################
     @classmethod
     def _print_stack(cls, stackkeys, stack):
-        """ Print stackkeys and stack for debugging """
+        """Print stackkeys and stack for debugging.
+        """
         print("----- STACK -----")
         if len(stackkeys) != len(stack):
             print("\tWarning: stackkeys and stack not same length")
@@ -477,8 +469,8 @@ class WCL(OrderedDict):
 
 
 def run_test():
-    """Calls read and write routines as a test"""
-
+    """Calls read and write routines as a test.
+    """
     # created in order for the following variables
     # to be local instead of at module level
 

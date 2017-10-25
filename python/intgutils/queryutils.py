@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-""" Functions useful for query codes to be called by framework """
+
+"""Functions useful for query codes to be called by framework.
+"""
 
 import re
 import json
@@ -8,12 +10,10 @@ from intgutils.wcl import WCL
 import intgutils.intgdefs as intgdefs
 import despymisc.miscutils as miscutils
 
-###########################################################
-
 
 def make_where_clause(dbh, key, value):
-    """ return properly formatted string for a where clause """
-
+    """Return properly formatted string for a where clause.
+    """
     if miscutils.fwdebug_check(1, 'PFWFILELIST_DEBUG'):
         miscutils.fwdebug_print("key = %s" % (key))
         miscutils.fwdebug_print("value = %s" % str(value))
@@ -73,11 +73,10 @@ def make_where_clause(dbh, key, value):
     return condition
 
 
-###########################################################
 # qdict[<table>][key_vals][<key>]
 def create_query_string(dbh, qdict):
-    """ returns a properly formatted sql query string given a special query dictionary  """
-
+    """Returns a properly formatted sql query string given a query dictionary.
+    """
     selectfields = []
     fromtables = []
     whereclauses = []
@@ -122,10 +121,9 @@ def create_query_string(dbh, qdict):
     return query
 
 
-###########################################################
 def gen_file_query(dbh, query, debug=3):
-    """ Generic file query """
-
+    """Generic file query.
+    """
     sql = create_query_string(dbh, query)
     if debug >= 3:
         print("sql =", sql)
@@ -143,10 +141,9 @@ def gen_file_query(dbh, query, debug=3):
     return result
 
 
-###########################################################
 def gen_file_list(dbh, query, debug=3):
-    """ Return list of files retrieved from the database using given query dict """
-
+    """Return list of files retrieved from the database using given query dict.
+    """
 #    query['location']['key_vals']['archivesites'] = '[^N]'
 #    query['location']['select_fields'] = 'all'
 #    query['location']['hash_key'] = 'id'
@@ -165,10 +162,9 @@ def gen_file_list(dbh, query, debug=3):
     return results
 
 
-###########################################################
 def convert_single_files_to_lines(filelist, initcnt=1):
-    """ Convert single files to dict of lines in prep for output """
-
+    """Convert single files to dict of lines in prep for output.
+    """
     count = initcnt
     linedict = {'list': {}}
 
@@ -186,14 +182,15 @@ def convert_single_files_to_lines(filelist, initcnt=1):
         count += 1
     return linedict
 
-###########################################################
-
 
 def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
-    """ Convert list of list of file dictionaries to dict of lines
-        in prep for output for framework
-        (filelist = [ [ {file 1 dict} {file 2 dict} ] [ { file 1 dict}..."""
+    """Prepare output.
 
+    Convert list of list of file dictionaries to dict of lines in prep for
+    output for framework
+
+        (filelist = [ [ {file 1 dict} {file 2 dict} ] [ { file 1 dict}...
+    """
     lcnt = initcnt
     lines = {'list': {intgdefs.LISTENTRY: {}}}
     for oneline in filelist:
@@ -206,12 +203,10 @@ def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
         lcnt += 1
     return lines
 
-###########################################################
-
 
 def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT):
-    """ Writes dataset to file in specified output format """
-
+    """Writes dataset to file in specified output format.
+    """
     if outtype == 'xml':
         output_lines_xml(filename, dataset)
     elif outtype == 'wcl':
@@ -222,10 +217,9 @@ def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT
         raise Exception('Invalid outtype (%s).  Valid outtypes: xml, wcl, json' % outtype)
 
 
-###########################################################
 def output_lines_xml(filename, dataset):
-    """Writes dataset to file in XML format"""
-
+    """Writes dataset to file in XML format.
+    """
     with open(filename, 'w') as xmlfh:
         xmlfh.write("<list>\n")
         for datak, line in list(dataset.items()):
@@ -242,17 +236,16 @@ def output_lines_xml(filename, dataset):
         xmlfh.write("</list>\n")
 
 
-###########################################################
 def output_lines_wcl(filename, dataset):
-    """ Writes dataset to file in WCL format """
-
+    """Writes dataset to file in WCL format.
+    """
     dswcl = WCL(dataset)
     with open(filename, "w") as wclfh:
         dswcl.write(wclfh, True, 4)  # print it sorted
 
 
-###########################################################
 def output_lines_json(filename, dataset):
-    """ Writes dataset to file in json format """
+    """Writes dataset to file in json format.
+    """
     with open(filename, "w") as jsonfh:
         json.dump(dataset, jsonfh, indent=4, separators=(',', ': '))

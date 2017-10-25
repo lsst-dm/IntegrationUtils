@@ -1,4 +1,5 @@
-""" string definitions """
+"""String definitions.
+"""
 
 REPLACE_VARS = 'replace_vars'
 
