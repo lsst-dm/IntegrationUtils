@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 
-# $Id$
-# $Rev::                                  $:  # Revision of last commit.
-# $LastChangedBy::                        $:  # Author of last commit.
-# $LastChangedDate::                      $:  # Date of last commit.
-
-# pylint: disable=print-statement
-
-"""
-Contains definition of basic wrapper class
+"""Contains definition of basic wrapper class.
 """
 
 import time
@@ -34,9 +26,9 @@ WRAPPER_OUTPUT_PREFIX = 'WRAP: '
 
 
 class BasicWrapper(object):
-    """ Basic wrapper class """
+    """Basic wrapper class.
+    """
 
-    ######################################################################
     def __init__(self, wclfile, debug=1):
         """ Read input wcl to initialize object """
 
@@ -58,9 +50,9 @@ class BasicWrapper(object):
         self.curr_task = []
         self.curr_exec = None
 
-    ######################################################################
     def determine_status(self):
-        """ Check all task status to determine wrapper status """
+        """Check all task status to determine wrapper status.
+        """
         status = 0
 
         execs = intgmisc.get_exec_sections(self.inputwcl, intgdefs.IW_EXEC_PREFIX)
@@ -70,7 +62,7 @@ class BasicWrapper(object):
         for ekey in sorted(execs.keys()):
             if ekey in self.outputwcl:
                 if 'task_info' in self.outputwcl[ekey]:
-                    for taskd in self.outputwcl[ekey]['task_info'].values():
+                    for taskd in list(self.outputwcl[ekey]['task_info'].values()):
                         if 'status' in taskd:
                             if taskd['status'] != 0:
                                 status = taskd['status']
@@ -81,7 +73,7 @@ class BasicWrapper(object):
                             status = 1
                 else:
                     if miscutils.fwdebug_check(3, "BASICWRAP_DEBUG"):
-                        miscutils.fwdebug_print("WARN: Missing task_info in outputwcl for %s" % \
+                        miscutils.fwdebug_print("WARN: Missing task_info in outputwcl for %s" %
                                                 ekey, WRAPPER_OUTPUT_PREFIX)
                     status = 1
             else:
@@ -89,20 +81,18 @@ class BasicWrapper(object):
 
         return status
 
-    ######################################################################
     def get_status(self):
-        """ Return status of wrapper execution """
+        """Return status of wrapper execution.
+        """
         status = 1
         if 'status' in self.outputwcl['wrapper']:
             status = self.outputwcl['wrapper']['status']
 
         return status
 
-    ######################################################################
     def check_command_line(self, exsect, exwcl):
-        """ Ensure that certain command line arguments are specified """
-        # pylint: disable=unused-argument
-
+        """Ensure that certain command line arguments are specified.
+        """
         self.start_exec_task('check_command_line')
 
         #if intgdefs.IW_CHECK_COMMAND in self.inputwcl and \
@@ -122,10 +112,9 @@ class BasicWrapper(object):
 
         return 0
 
-
-    ######################################################################
     def create_command_line(self, execnum, exwcl):
-        """ Create command line string handling hyphens appropriately"""
+        """Create command line string handling hyphens appropriately.
+        """
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
             miscutils.fwdebug_print("execnum = '%s', exwcl = '%s'" % (execnum, exwcl),
                                     WRAPPER_OUTPUT_PREFIX)
@@ -143,7 +132,7 @@ class BasicWrapper(object):
                     hyphen_type = exwcl['cmd_hyphen']
 
                 # loop through command line args
-                for key, val in exwcl['cmdline'].items():
+                for key, val in list(exwcl['cmdline'].items()):
                     if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
                         miscutils.fwdebug_print("key = '%s', val = '%s'" % (key, val),
                                                 WRAPPER_OUTPUT_PREFIX)
@@ -169,7 +158,7 @@ class BasicWrapper(object):
                             cmdlist.append(" %s%s %s" % (hyphen, key, expandval))
 
                 # insert position sensitive arguments into specified location in argument list
-                for k in sorted(posargs.iterkeys()):
+                for k in sorted(posargs.keys()):
                     cmdlist.insert(int(k), "%s" % posargs[k])
 
             # convert list of args into string
@@ -177,19 +166,19 @@ class BasicWrapper(object):
                 miscutils.fwdebug_print("cmdlist = '%s'" % (cmdlist), WRAPPER_OUTPUT_PREFIX)
             cmdstr = ' '.join(cmdlist)
         else:
-            print "Error: missing execname in wcl for exec #%d" % execnum
-            print "exec wcl = %s" % exwcl
+            print("Error: missing execname in wcl for exec #%d" % execnum)
+            print("exec wcl = %s" % exwcl)
             raise KeyError('Missing execname in wcl for exec #%d' % execnum)
 
         self.curr_exec['cmdline'] = cmdstr
         self.end_exec_task(0)
 
-
-    ######################################################################
     def save_exec_version(self, exwcl):
-        """ Run command with version flag and parse output for version information """
-        # assumes exit code for version is 0
+        """Get the version information.
 
+        Run command with version flag and parse output for version information.
+        """
+        # assumes exit code for version is 0
         self.start_exec_task('save_exec_version')
 
         ver = None
@@ -207,13 +196,13 @@ class BasicWrapper(object):
                                            stderr=subprocess.STDOUT)
             except:
                 (exc_type, exc_value) = sys.exc_info()[0:2]
-                print "********************"
-                print "Unexpected error: %s - %s" % (exc_type, exc_value)
-                print "cmd> %s" % cmd
-                print "Probably could not find %s in path" % shlex.split(cmd)[0]
-                print "Check for mispelled execname in submit wcl or"
-                print "    make sure that the corresponding eups package is in the metapackage "
-                print "    and it sets up the path correctly"
+                print("********************")
+                print("Unexpected error: %s - %s" % (exc_type, exc_value))
+                print("cmd> %s" % cmd)
+                print("Probably could not find %s in path" % shlex.split(cmd)[0])
+                print("Check for mispelled execname in submit wcl or")
+                print("    make sure that the corresponding eups package is in the metapackage ")
+                print("    and it sets up the path correctly")
                 raise
 
             process.wait()
@@ -234,7 +223,7 @@ class BasicWrapper(object):
                         ver = vmatch.group(1)
                     else:
                         if miscutils.fwdebug_check(1, 'BASICWRAP_DEBUG'):
-                            miscutils.fwdebug_print("re.search didn't find version for exec %s" % \
+                            miscutils.fwdebug_print("re.search didn't find version for exec %s" %
                                                     execname, WRAPPER_OUTPUT_PREFIX)
                         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
                             miscutils.fwdebug_print("\tcmd output=%s" % out, WRAPPER_OUTPUT_PREFIX)
@@ -243,7 +232,7 @@ class BasicWrapper(object):
                 except Exception as err:
                     #print type(err)
                     ver = None
-                    print "Error: Exception from re.match.  Didn't find version: %s" % err
+                    print("Error: Exception from re.match.  Didn't find version: %s" % err)
                     raise
         else:
             miscutils.fwdebug_print("INFO: Could not find version info for exec %s" % execname,
@@ -254,10 +243,9 @@ class BasicWrapper(object):
             self.curr_exec['version'] = ver
         self.end_exec_task(0)
 
-    ######################################################################
     def create_output_dirs(self, exwcl):
-        """ Make directories for output files """
-
+        """Make directories for output files.
+        """
         self.start_exec_task('create_output_dirs')
 
         if intgdefs.IW_OUTPUTS in exwcl:
@@ -311,10 +299,9 @@ class BasicWrapper(object):
 
         self.end_exec_task(0)
 
-    ######################################################################
     def run_exec(self):
-        """ Run given command line """
-
+        """Run given command line.
+        """
         self.start_exec_task('run_exec')
         cmdline = self.curr_exec['cmdline']
 
@@ -322,7 +309,7 @@ class BasicWrapper(object):
         procinfo = None
 
         miscutils.fwdebug_print("INFO: cmd = %s" % cmdline, WRAPPER_OUTPUT_PREFIX)
-        print '*' * 70
+        print('*' * 70)
         sys.stdout.flush()
         try:
             (retcode, procinfo) = intgmisc.run_exec(cmdline)
@@ -330,14 +317,14 @@ class BasicWrapper(object):
             if exc.errno != errno.ENOENT:
                 raise
 
-            print "********************"
+            print("********************")
             (exc_type, exc_value, _) = sys.exc_info()
-            print "%s - %s" % (exc_type, exc_value)
-            print "cmd> %s" % cmdline
-            print "Probably could not find %s in path" % cmdline.split()[0]
-            print "Check for mispelled execname in submit wcl or"
-            print "    make sure that the corresponding eups package is in "
-            print "    the metapackage and it sets up the path correctly"
+            print("%s - %s" % (exc_type, exc_value))
+            print("cmd> %s" % cmdline)
+            print("Probably could not find %s in path" % cmdline.split()[0])
+            print("Check for mispelled execname in submit wcl or")
+            print("    make sure that the corresponding eups package is in ")
+            print("    the metapackage and it sets up the path correctly")
             raise
 
         sys.stdout.flush()
@@ -354,17 +341,15 @@ class BasicWrapper(object):
 
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
             miscutils.fwdebug_print("END", WRAPPER_OUTPUT_PREFIX)
-        print '*' * 70
+        print('*' * 70)
         self.curr_exec['status'] = retcode
         self.curr_exec['procinfo'] = procinfo
 
         self.end_exec_task(retcode)
 
-
-    ######################################################################
     def check_inputs(self, ekey):
-        """ Check which input files/lists do not exist """
-
+        """Check which input files/lists do not exist.
+        """
         self.start_exec_task('check_inputs')
 
         existfiles = {}
@@ -387,11 +372,10 @@ class BasicWrapper(object):
         self.end_exec_task(0)
         return existfiles
 
-
     ######################################################################
     #def check_output_list(self, sect):
-    #    """ Check that the output files described by a list file exist """
-    #
+    #    """Check that the output files described by a list file exist.
+    #    """
     #    if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
     #        miscutils.fwdebug_print("INFO: Beg sect=%s" % sect, WRAPPER_OUTPUT_PREFIX)
     #
@@ -407,11 +391,9 @@ class BasicWrapper(object):
     #
     #   return (existfiles, missingfiles)
 
-
-    ######################################################################
 #    def check_output_files(self, sect):
-#        """ Check that the files for a single output file section exist """
-#
+#        """Check that the files for a single output file section exist.
+#        """
 #        sectkeys = sect.split('.')
 #        sectname = sectkeys[1]
 #
@@ -444,11 +426,9 @@ class BasicWrapper(object):
 #
 #        return (existfiles, missingfiles)
 
-
-    ######################################################################
     def get_optout(self, sect):
-        """ Return whether file(s) are optional outputs """
-
+        """Return whether file(s) are optional outputs.
+        """
         optout = False
         sectkeys = sect.split('.')
         if sectkeys[0] == intgdefs.IW_FILE_SECT:
@@ -456,16 +436,16 @@ class BasicWrapper(object):
                 optout = miscutils.convertBool(self.inputwcl.get(sect)[intgdefs.IW_OUTPUT_OPTIONAL])
         elif sectkeys[0] == intgdefs.IW_LIST_SECT:
             if intgdefs.IW_OUTPUT_OPTIONAL in self.inputwcl.get("%s.%s" % (intgdefs.IW_FILE_SECT, sectkeys[2])):
-                optout = miscutils.convertBool(self.inputwcl.get("%s.%s" % (intgdefs.IW_FILE_SECT, sectkeys[2]))[intgdefs.IW_OUTPUT_OPTIONAL])
+                optout = miscutils.convertBool(self.inputwcl.get("%s.%s" % (
+                    intgdefs.IW_FILE_SECT, sectkeys[2]))[intgdefs.IW_OUTPUT_OPTIONAL])
         else:
             raise KeyError("Unknown data section %s" % sectkeys[0])
 
         return optout
 
-    ######################################################################
     def check_outputs(self, ekey, exitcode):
-        """ Check which output files were created, renaming if necessary """
-
+        """Check which output files were created, renaming if necessary.
+        """
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
             miscutils.fwdebug_print("INFO: Beg", WRAPPER_OUTPUT_PREFIX)
 
@@ -480,12 +460,12 @@ class BasicWrapper(object):
                 miscutils.fwdebug_print("INFO: sect=%s" % sect, WRAPPER_OUTPUT_PREFIX)
 
             exists, missing = intgmisc.check_files(outs[sect])
-            existfiles.update({sect:exists})
+            existfiles.update({sect: exists})
             if len(missing) > 0:
                 optout = self.get_optout(sect)
                 if optout:
                     if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
-                        miscutils.fwdebug_print("\tINFO: optional output file '%s' does not exist (sect: %s)." % \
+                        miscutils.fwdebug_print("\tINFO: optional output file '%s' does not exist (sect: %s)." %
                                                 (missing, sect), WRAPPER_OUTPUT_PREFIX)
                 elif exitcode != 0:
                     if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
@@ -494,8 +474,7 @@ class BasicWrapper(object):
                 else:
                     miscutils.fwdebug_print("ERROR: Missing required output file(s) (%s:%s)" % (sect, missing),
                                             WRAPPER_OUTPUT_PREFIX)
-                    missingfiles.update({sect:missing})
-
+                    missingfiles.update({sect: missing})
 
         if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
             miscutils.fwdebug_print("INFO: existfiles=%s" % existfiles, WRAPPER_OUTPUT_PREFIX)
@@ -511,24 +490,22 @@ class BasicWrapper(object):
         self.end_exec_task(status)
         return existfiles
 
-    ######################################################################
     def transform_inputs(self, exwcl):
-        """ Transform inputs stored by DESDM into form needed by exec """
-        # pylint: disable=unused-argument
+        """Transform inputs stored by DESDM into form needed by exec.
+        """
         self.start_exec_task('transform_inputs')
         self.end_exec_task(0)
 
-    ######################################################################
     def transform_outputs(self, exwcl):
-        """ Transform outputs created by exec into form needed by DESDM """
+        """Transform outputs created by exec into form needed by DESDM.
+        """
         # pylint: disable=unused-argument
         self.start_exec_task('transform_outputs')
         self.end_exec_task(0)
 
-
-    ######################################################################
     def save_provenance(self, execsect, exwcl, infiles, outfiles, exitcode):
-        """ Create provenance wcl """
+        """Create provenance wcl.
+        """
         self.start_exec_task('save_provenance')
 
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
@@ -541,7 +518,7 @@ class BasicWrapper(object):
 
         # convert probably fullnames in outexist to filename+compression
         new_outfiles = OrderedDict()
-        for exlabel, exlist in outfiles.items():
+        for exlabel, exlist in list(outfiles.items()):
             if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                 miscutils.fwdebug_print("INFO: exlabel=%s exlist=%s" % (exlabel, exlist),
                                         WRAPPER_OUTPUT_PREFIX)
@@ -560,7 +537,7 @@ class BasicWrapper(object):
         new_infiles = {}
         if len(infiles) > 0:
             all_infiles = []
-            for key, sublist in infiles.items():
+            for key, sublist in list(infiles.items()):
                 new_infiles[key] = []
                 for fullname in sublist:
                     basename = miscutils.parse_fullname(fullname, miscutils.CU_PARSE_BASENAME)
@@ -593,7 +570,7 @@ class BasicWrapper(object):
                     #                        WRAPPER_OUTPUT_PREFIX)
                     miscutils.fwdebug_print("INFO: optout = %s" % optout,
                                             WRAPPER_OUTPUT_PREFIX)
-                    miscutils.fwdebug_print("INFO: new_outfiles.keys = %s" % new_outfiles.keys(),
+                    miscutils.fwdebug_print("INFO: new_outfiles.keys = %s" % list(new_outfiles.keys()),
                                             WRAPPER_OUTPUT_PREFIX)
                     miscutils.fwdebug_print("INFO: new_outfiles = %s" % new_outfiles,
                                             WRAPPER_OUTPUT_PREFIX)
@@ -621,23 +598,23 @@ class BasicWrapper(object):
                         miscutils.fwdebug_print("INFO: before wdf = %s" % prov[provdefs.PROV_WDF],
                                                 WRAPPER_OUTPUT_PREFIX)
 
-
                     if parent_sect not in infiles and parent_sect not in new_outfiles:
                         miscutils.fwdebug_print("parent_sect = %s" % parent_sect, WRAPPER_OUTPUT_PREFIX)
-                        miscutils.fwdebug_print("infiles.keys() = %s" % infiles.keys(),
+                        miscutils.fwdebug_print("infiles.keys() = %s" % list(infiles.keys()),
                                                 WRAPPER_OUTPUT_PREFIX)
-                        miscutils.fwdebug_print("outfiles.keys() = %s" % outfiles.keys(),
+                        miscutils.fwdebug_print("outfiles.keys() = %s" % list(outfiles.keys()),
                                                 WRAPPER_OUTPUT_PREFIX)
                         miscutils.fwdebug_print("used = %s" % exwcl[intgdefs.IW_INPUTS],
                                                 WRAPPER_OUTPUT_PREFIX)
-                        miscutils.fwdebug_print("ERROR: Could not find parent files for %s" % \
+                        miscutils.fwdebug_print("ERROR: Could not find parent files for %s" %
                                                 (dpair), WRAPPER_OUTPUT_PREFIX)
                         num_errs += 1
                     else:
                         wdf[key] = OrderedDict()
                         wdf[key][provdefs.PROV_CHILDREN] = provdefs.PROV_DELIM.join(new_outfiles[child_sect])
                         if parent_sect in infiles:
-                            wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(new_infiles[parent_sect])
+                            wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(
+                                new_infiles[parent_sect])
                         elif parent_sect in new_outfiles:
                             # this output was generated within same
                             #   program/wrapper from other output files
@@ -646,7 +623,6 @@ class BasicWrapper(object):
                                 parents.append(miscutils.parse_fullname(outparent,
                                                                         miscutils.CU_PARSE_FILENAME))
                             wdf[key][provdefs.PROV_PARENTS] = provdefs.PROV_DELIM.join(parents)
-
 
                 if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                     miscutils.fwdebug_print("INFO: after wdf = %s" % prov[provdefs.PROV_WDF],
@@ -660,11 +636,9 @@ class BasicWrapper(object):
         self.end_exec_task(num_errs)
         return prov
 
-
-    ######################################################################
     def write_outputwcl(self, outfilename=None):
-        """ Write output wcl to file """
-
+        """Write output wcl to file.
+        """
         if outfilename is None:
             outfilename = self.inputwcl['wrapper']['outputwcl']
 
@@ -680,16 +654,15 @@ class BasicWrapper(object):
         with open(outfilename, 'w') as wclfh:
             self.outputwcl.write(wclfh, True)
 
-
-    ######################################################################
     def start_exec_task(self, name):
-        """ Save start execution info """
+        """Save start execution info.
+        """
         self.curr_task.append(name)
         self.curr_exec['task_info'][name] = {'start_time': time.time()}
 
-    ######################################################################
     def end_exec_task(self, status):
-        """ Save end execution info """
+        """Save end execution info.
+        """
         name = self.curr_task.pop()
 
         task_info = self.curr_exec['task_info'][name]
@@ -699,10 +672,9 @@ class BasicWrapper(object):
         # just for human reading convenience
         task_info['walltime'] = task_info['end_time'] - task_info['start_time']
 
-
-    ######################################################################
     def end_all_tasks(self, status):
-        """ End all exec tasks in case of exiting nested tasks """
+        """End all exec tasks in case of exiting nested tasks.
+        """
         end_time = time.time()
         for name in reversed(self.curr_task):
             task_info = self.curr_exec['task_info'][name]
@@ -714,15 +686,14 @@ class BasicWrapper(object):
 
         self.curr_task = []
 
-
-    ######################################################################
     def save_outputs_by_section(self, ekey, outexist):
-        """ save fullnames from outexist to outputs by section """
+        """Save fullnames from outexist to outputs by section.
+        """
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
-            miscutils.fwdebug_print("INFO: before adding  outputs_by_sect=%s" % \
+            miscutils.fwdebug_print("INFO: before adding  outputs_by_sect=%s" %
                                     (self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]),
                                     WRAPPER_OUTPUT_PREFIX)
-        for exlabel, exlist in outexist.items():
+        for exlabel, exlist in list(outexist.items()):
             if len(exlist) != 0:
                 if exlabel not in self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]:
                     self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT][exlabel] = {}
@@ -737,22 +708,20 @@ class BasicWrapper(object):
                 miscutils.fwdebug_print("WARN: 0 output files in exlist for %s" % (exlabel),
                                         WRAPPER_OUTPUT_PREFIX)
 
-
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
-            miscutils.fwdebug_print("INFO: after adding  outputs_by_sect=%s" % \
+            miscutils.fwdebug_print("INFO: after adding  outputs_by_sect=%s" %
                                     (self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]),
                                     WRAPPER_OUTPUT_PREFIX)
 
-
-    ######################################################################
     def cleanup(self):
-        """ Remove intermediate files from wrapper execution """
+        """Remove intermediate files from wrapper execution.
+        """
         self.outputwcl['wrapper']['cleanup_start'] = time.time()
         self.outputwcl['wrapper']['cleanup_end'] = time.time()
 
-    ######################################################################
     def run_wrapper(self):
-        """ Workflow for this wrapper """
+        """Workflow for this wrapper.
+        """
         if miscutils.fwdebug_check(3, 'BASICWRAP_DEBUG'):
             miscutils.fwdebug_print("INFO: Begin", WRAPPER_OUTPUT_PREFIX)
         self.outputwcl['wrapper']['start_time'] = time.time()
@@ -783,7 +752,8 @@ class BasicWrapper(object):
             self.cleanup()
             self.outputwcl['wrapper']['status'] = self.determine_status()
         except SystemExit as e:
-            miscutils.fwdebug_print("INFO: wrapper called sys.exit (%s).  Halting." % str(e), WRAPPER_OUTPUT_PREFIX)
+            miscutils.fwdebug_print("INFO: wrapper called sys.exit (%s).  Halting." %
+                                    str(e), WRAPPER_OUTPUT_PREFIX)
             self.outputwcl['wrapper']['status'] = int(str(e))
             self.end_all_tasks(1)
         except Exception:
@@ -793,17 +763,16 @@ class BasicWrapper(object):
             self.outputwcl['wrapper']['status'] = 1
             self.end_all_tasks(1)
 
-
         if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
-            miscutils.fwdebug_print("INFO: outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]=%s" % \
+            miscutils.fwdebug_print("INFO: outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]=%s" %
                                     (self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT]),
                                     WRAPPER_OUTPUT_PREFIX)
-        for fsname, fssect in self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT].items():
+        for fsname, fssect in list(self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT].items()):
             if miscutils.fwdebug_check(6, 'BASICWRAP_DEBUG'):
                 miscutils.fwdebug_print("INFO: making string for sect %s: %s" % (fsname, fssect),
                                         WRAPPER_OUTPUT_PREFIX)
-            for exname, exlist in fssect.items():
+            for exname, exlist in list(fssect.items()):
                 self.outputwcl[intgdefs.OW_OUTPUTS_BY_SECT][fsname][exname] = provdefs.PROV_DELIM.join(exlist)
         self.outputwcl['wrapper']['end_time'] = time.time()
 
-        miscutils.fwdebug_print("INFO: end - exit status = %s" % self.get_status() , WRAPPER_OUTPUT_PREFIX)
+        miscutils.fwdebug_print("INFO: end - exit status = %s" % self.get_status(), WRAPPER_OUTPUT_PREFIX)
