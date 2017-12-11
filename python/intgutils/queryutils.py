@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+# $Id$
+# $Rev::                                  $:  # Revision of last commit.
+# $LastChangedBy::                        $:  # Author of last commit.
+# $LastChangedDate::                      $:  # Date of last commit.
 
-"""Functions useful for query codes to be called by framework.
-"""
+""" Functions useful for query codes to be called by framework """
 
 import re
 import json
@@ -10,10 +13,10 @@ from intgutils.wcl import WCL
 import intgutils.intgdefs as intgdefs
 import despymisc.miscutils as miscutils
 
-
+###########################################################
 def make_where_clause(dbh, key, value):
-    """Return properly formatted string for a where clause.
-    """
+    """ return properly formatted string for a where clause """
+
     if miscutils.fwdebug_check(1, 'PFWFILELIST_DEBUG'):
         miscutils.fwdebug_print("key = %s" % (key))
         miscutils.fwdebug_print("value = %s" % str(value))
@@ -73,17 +76,19 @@ def make_where_clause(dbh, key, value):
     return condition
 
 
+
+###########################################################
 # qdict[<table>][key_vals][<key>]
 def create_query_string(dbh, qdict):
-    """Returns a properly formatted sql query string given a query dictionary.
-    """
+    """ returns a properly formatted sql query string given a special query dictionary  """
+
     selectfields = []
     fromtables = []
     whereclauses = []
 
-    print(qdict)
+    print qdict
 
-    for tablename, tabledict in list(qdict.items()):
+    for tablename, tabledict in qdict.items():
         fromtables.append(tablename)
         if 'select_fields' in tabledict:
             table_select_fields = tabledict['select_fields']
@@ -97,7 +102,7 @@ def create_query_string(dbh, qdict):
                     selectfields.append("%s.%s" % (tablename, field))
 
         if 'key_vals' in tabledict:
-            for key, val in list(tabledict['key_vals'].items()):
+            for key, val in tabledict['key_vals'].items():
                 whereclauses.append(make_where_clause(dbh, '%s.%s' % (tablename, key), val))
 
         if 'join' in tabledict:
@@ -115,18 +120,19 @@ def create_query_string(dbh, qdict):
                     whereclauses.append('%s.%s=%s' % (jtable, key, val))
 
     query = "SELECT %s FROM %s WHERE %s" % \
-        (','.join(selectfields),
-         ','.join(fromtables),
-         ' AND '.join(whereclauses))
+                (','.join(selectfields),
+                 ','.join(fromtables),
+                 ' AND '.join(whereclauses))
     return query
 
 
+###########################################################
 def gen_file_query(dbh, query, debug=3):
-    """Generic file query.
-    """
+    """ Generic file query """
+
     sql = create_query_string(dbh, query)
     if debug >= 3:
-        print("sql =", sql)
+        print "sql =", sql
 
     curs = dbh.cursor()
     curs.execute(sql)
@@ -134,22 +140,23 @@ def gen_file_query(dbh, query, debug=3):
 
     result = []
     for line in curs:
-        linedict = dict(list(zip(desc, line)))
+        linedict = dict(zip(desc, line))
         result.append(linedict)
 
     curs.close()
     return result
 
 
+###########################################################
 def gen_file_list(dbh, query, debug=3):
-    """Return list of files retrieved from the database using given query dict.
-    """
+    """ Return list of files retrieved from the database using given query dict """
+
 #    query['location']['key_vals']['archivesites'] = '[^N]'
 #    query['location']['select_fields'] = 'all'
 #    query['location']['hash_key'] = 'id'
 
     if debug:
-        print("gen_file_list: calling gen_file_query with", query)
+        print "gen_file_list: calling gen_file_query with", query
 
     results = gen_file_query(dbh, query)
 
@@ -162,15 +169,16 @@ def gen_file_list(dbh, query, debug=3):
     return results
 
 
+###########################################################
 def convert_single_files_to_lines(filelist, initcnt=1):
-    """Convert single files to dict of lines in prep for output.
-    """
+    """ Convert single files to dict of lines in prep for output """
+
     count = initcnt
     linedict = {'list': {}}
 
     if type(filelist) is dict and len(filelist) > 1 and \
-            'filename' not in list(filelist.keys()):
-        filelist = list(filelist.values())
+            'filename' not in filelist.keys():
+        filelist = filelist.values()
     elif type(filelist) is dict:  # single file
         filelist = [filelist]
 
@@ -182,15 +190,12 @@ def convert_single_files_to_lines(filelist, initcnt=1):
         count += 1
     return linedict
 
-
+###########################################################
 def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
-    """Prepare output.
+    """ Convert list of list of file dictionaries to dict of lines
+        in prep for output for framework
+        (filelist = [ [ {file 1 dict} {file 2 dict} ] [ { file 1 dict}..."""
 
-    Convert list of list of file dictionaries to dict of lines in prep for
-    output for framework
-
-        (filelist = [ [ {file 1 dict} {file 2 dict} ] [ { file 1 dict}...
-    """
     lcnt = initcnt
     lines = {'list': {intgdefs.LISTENTRY: {}}}
     for oneline in filelist:
@@ -203,10 +208,10 @@ def convert_multiple_files_to_lines(filelist, filelabels, initcnt=1):
         lcnt += 1
     return lines
 
-
+###########################################################
 def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT):
-    """Writes dataset to file in specified output format.
-    """
+    """ Writes dataset to file in specified output format """
+
     if outtype == 'xml':
         output_lines_xml(filename, dataset)
     elif outtype == 'wcl':
@@ -217,16 +222,17 @@ def output_lines(filename, dataset, outtype=intgdefs.DEFAULT_QUERY_OUTPUT_FORMAT
         raise Exception('Invalid outtype (%s).  Valid outtypes: xml, wcl, json' % outtype)
 
 
+###########################################################
 def output_lines_xml(filename, dataset):
-    """Writes dataset to file in XML format.
-    """
+    """Writes dataset to file in XML format"""
+
     with open(filename, 'w') as xmlfh:
         xmlfh.write("<list>\n")
-        for datak, line in list(dataset.items()):
+        for datak, line in dataset.items():
             xmlfh.write("\t<line>\n")
-            for name, filedict in list(line.items()):
+            for name, filedict in line.items():
                 xmlfh.write("\t\t<file nickname='%s'>\n" % name)
-                for key, val in list(filedict.items()):
+                for key, val in filedict.items():
                     if key.lower() == 'ccd':
                         val = "%02d" % (val)
                     xmlfh.write("\t\t\t<%s>%s</%s>" % (datak, val, datak))
@@ -236,16 +242,18 @@ def output_lines_xml(filename, dataset):
         xmlfh.write("</list>\n")
 
 
+###########################################################
 def output_lines_wcl(filename, dataset):
-    """Writes dataset to file in WCL format.
-    """
+    """ Writes dataset to file in WCL format """
+
     dswcl = WCL(dataset)
     with open(filename, "w") as wclfh:
         dswcl.write(wclfh, True, 4)  # print it sorted
 
 
+###########################################################
 def output_lines_json(filename, dataset):
-    """Writes dataset to file in json format.
-    """
+
+    """ Writes dataset to file in json format """
     with open(filename, "w") as jsonfh:
         json.dump(dataset, jsonfh, indent=4, separators=(',', ': '))

@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
-"""Contains misc integration utilities.
+# $Id$
+# $Rev::                                  $:  # Revision of last commit.
+# $LastChangedBy::                        $:  # Author of last commit.
+# $LastChangedDate::                      $:  # Date of last commit.
+
+"""
+Contains misc integration utilities
 """
 
 import shlex
@@ -12,9 +18,10 @@ from intgutils import intgdefs
 import intgutils.replace_funcs as replfuncs
 
 
+######################################################################
 def check_files(fullnames):
-    """Check whether given files do exist on disk.
-    """
+    """ Check whether given files do exist on disk """
+
     exists = []
     missing = []
     for fname in fullnames:
@@ -25,9 +32,10 @@ def check_files(fullnames):
     return (exists, missing)
 
 
+#######################################################################
 def get_cmd_hyphen(hyphen_type, cmd_option):
-    """Determine correct hyphenation for command line argument.
-    """
+    """ Determine correct hyphenation for command line argument """
+
     hyphen = '-'
 
     if hyphen_type == 'alldouble':
@@ -44,12 +52,11 @@ def get_cmd_hyphen(hyphen_type, cmd_option):
 
     return hyphen
 
-
+#######################################################################
 def get_exec_sections(wcl, prefix):
-    """Returns exec sections appearing in given wcl.
-    """
+    """ Returns exec sections appearing in given wcl """
     execs = {}
-    for key, val in list(wcl.items()):
+    for key, val in wcl.items():
         if miscutils.fwdebug_check(3, "DEBUG"):
             miscutils.fwdebug_print("\tsearching for exec prefix in %s" % key)
 
@@ -60,9 +67,10 @@ def get_exec_sections(wcl, prefix):
     return execs
 
 
+#######################################################################
 def run_exec(cmd):
-    """Run an executable with given command returning process information.
-    """
+    """ Run an executable with given command returning process information """
+
     procfields = ['ru_idrss', 'ru_inblock', 'ru_isrss', 'ru_ixrss',
                   'ru_majflt', 'ru_maxrss', 'ru_minflt', 'ru_msgrcv',
                   'ru_msgsnd', 'ru_nivcsw', 'ru_nsignals', 'ru_nswap',
@@ -77,9 +85,10 @@ def run_exec(cmd):
     return (retcode, procinfo)
 
 
+#######################################################################
 def remove_column_format(columns):
-    """Return columns minus any formatting specification.
-    """
+    """ Return columns minus any formatting specification """
+
     columns2 = []
     for col in columns:
         if col.startswith('$FMT{'):
@@ -93,9 +102,9 @@ def remove_column_format(columns):
     return columns2
 
 
+#######################################################################
 def convert_col_string_to_list(colstr, with_format=True):
-    """Convert a string of columns to list of columns.
-    """
+    """ convert a string of columns to list of columns """
     columns = re.findall(r'\$\S+\{.*\}|[^,\s]+', colstr)
 
     if not with_format:
@@ -103,9 +112,10 @@ def convert_col_string_to_list(colstr, with_format=True):
     return columns
 
 
+#######################################################################
 def read_fullnames_from_listfile(listfile, linefmt, colstr):
-    """Read a list file returning fullnames from the list.
-    """
+    """ Read a list file returning fullnames from the list """
+
     if miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
         miscutils.fwdebug_print('colstr=%s' % colstr)
 
@@ -149,7 +159,7 @@ def read_fullnames_from_listfile(listfile, linefmt, colstr):
                 for pos in pos2fsect:
                     # use common routine to parse actual fullname (e.g., remove [0])
                     parsemask = miscutils.CU_PARSE_PATH | miscutils.CU_PARSE_FILENAME | \
-                        miscutils.CU_PARSE_COMPRESSION
+                                miscutils.CU_PARSE_COMPRESSION
                     (path, filename, compression) = miscutils.parse_fullname(lineinfo[pos],
                                                                              parsemask)
                     fname = "%s/%s" % (path, filename)
@@ -162,9 +172,9 @@ def read_fullnames_from_listfile(listfile, linefmt, colstr):
     return fullnames
 
 
+######################################################################
 def get_list_fullnames(sect, modwcl):
-    """
-    """
+
     (_, listsect, filesect) = sect.split('.')
     ldict = modwcl[intgdefs.IW_LIST_SECT][listsect]
 
@@ -188,7 +198,7 @@ def get_list_fullnames(sect, modwcl):
     fullnames = read_fullnames_from_listfile(listname, listfmt, ldict['columns'])
     if miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
         miscutils.fwdebug_print("\tINFO: fullnames=%s" % fullnames)
-
+   
     if filesect not in fullnames:
         columns = convert_col_string_to_list(ldict['columns'], False)
 
@@ -203,18 +213,17 @@ def get_list_fullnames(sect, modwcl):
         if hasfullname:
             miscutils.fwdebug_print("ERROR: Could not find sect %s in list" % (filesect))
             miscutils.fwdebug_print("\tcolumns = %s" % (columns))
-            miscutils.fwdebug_print("\tlist keys = %s" % (list(fullnames.keys())))
+            miscutils.fwdebug_print("\tlist keys = %s" % (fullnames.keys()))
         elif miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
-            miscutils.fwdebug_print(
-                "WARN: Could not find sect %s in fullname list.   Not a problem if list (sect) has only data." % (filesect))
+            miscutils.fwdebug_print("WARN: Could not find sect %s in fullname list.   Not a problem if list (sect) has only data." % (filesect))
     else:
         setfnames = set(fullnames[filesect])
     return listname, setfnames
 
 
+######################################################################
 def get_file_fullnames(sect, filewcl, fullwcl):
-    """
-    """
+
     sectkeys = sect.split('.')
     sectname = sectkeys[1]
 
@@ -233,18 +242,20 @@ def get_file_fullnames(sect, filewcl, fullwcl):
     return set(fnames)
 
 
+
+######################################################################
 def get_fullnames(modwcl, fullwcl, exsect=None):
-    """Return dictionaries of input and output fullnames by section.
-    """
+    """ Return dictionaries of input and output fullnames by section """
+
     exec_sectnames = []
-    if exsect is None:
+    if exsect is None: 
         exec_sectnames = get_exec_sections(modwcl, intgdefs.IW_EXEC_PREFIX)
     else:
         exec_sectnames = [exsect]
 
-    # intermediate files (output of 1 exec, but input for another exec
-    # within same wrapper) are listed only with output files
-
+    # intermediate files (output of 1 exec, but input for another exec 
+    # within same wrapper) are listed only with output files 
+    
     # get output file names first so can exclude intermediate files from inputs
     outputs = {}
     allouts = set()
@@ -259,9 +270,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
                 elif sectkeys[0] == intgdefs.IW_LIST_SECT:
                     listname, outset = get_list_fullnames(sect, modwcl)
                 else:
-                    print("exwcl[intgdefs.IW_OUTPUTS]=", exwcl[intgdefs.IW_OUTPUTS])
-                    print("sect = ", sect)
-                    print("sectkeys = ", sectkeys)
+                    print "exwcl[intgdefs.IW_OUTPUTS]=", exwcl[intgdefs.IW_OUTPUTS]
+                    print "sect = ", sect
+                    print "sectkeys = ", sectkeys
                     raise KeyError("Unknown data section %s" % sectkeys[0])
                 outputs[sect] = outset
                 allouts.union(outset)
@@ -279,9 +290,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
                     listname, inset = get_list_fullnames(sect, modwcl)
                     #inset.add(listname)
                 else:
-                    print("exwcl[intgdefs.IW_INPUTS]=", exwcl[intgdefs.IW_INPUTS])
-                    print("sect = ", sect)
-                    print("sectkeys = ", sectkeys)
+                    print "exwcl[intgdefs.IW_INPUTS]=", exwcl[intgdefs.IW_INPUTS]
+                    print "sect = ", sect
+                    print "sectkeys = ", sectkeys
                     raise KeyError("Unknown data section %s" % sectkeys[0])
 
                 # exclude intermediate files from inputs
@@ -292,9 +303,10 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
     return inputs, outputs
 
 
+######################################################################
 #def check_list(sect, listwcl, filewcl):
-#    """Check that list and files inside list exist.
-#    """
+#    """ Check that list and files inside list exist """
+#
 #    existfiles = {}
 #    missingfiles = []
 #    (_, listsect, filesect) = sect.split('.')
@@ -332,10 +344,9 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
 #    return list_filename, existfiles, missingfiles
 #
 
+######################################################################
 #def check_input_list(sect, listwcl, filewcl):
-#    """Check that the list and contained files for a single input list
-#       section exist.
-#    """
+#    """ Check that the list and contained files for a single input list section exist """
 #
 #    if miscutils.fwdebug_check(3, 'INTGMISC_DEBUG'):
 #        miscutils.fwdebug_print("INFO: Beg sect=%s" % sect)
@@ -350,18 +361,21 @@ def get_fullnames(modwcl, fullwcl, exsect=None):
 #
 
 
+######################################################################
 def check_input_files(sect, filewcl):
-    """Check that the files for a single input file section exist.
-    """
+    """ Check that the files for a single input file section exist """
+
     sectkeys = sect.split('.')
     fnames = miscutils.fwsplit(filewcl[sectkeys[1]]['fullname'], ',')
     (exists1, missing1) = check_files(fnames)
     return (exists1, missing1)
 
 
+
+######################################################################
 #def check_exec_inputs(exwcl, listwcl, filewcl):
-#    """Check that inputs exist for module exec.
-#    """
+#    """ Check that inputs exist for module exec """
+#
 #    already_checked_list = {}
 #    existfiles = {}
 #    missingfiles = []

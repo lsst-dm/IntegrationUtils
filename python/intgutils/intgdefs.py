@@ -1,5 +1,4 @@
-"""String definitions.
-"""
+""" string definitions """
 
 REPLACE_VARS = 'replace_vars'
 
@@ -8,6 +7,7 @@ LISTENTRY = 'line'
 LIST_FORMAT = 'format'
 DEFAULT_LIST_FORMAT = 'textsp'
 DEFAULT_QUERY_OUTPUT_FORMAT = 'wcl'
+
 
 
 # IW_  (wrapper) input wcl
