@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-# $Id$
-# $Rev::                                  $:  # Revision of last commit.
-# $LastChangedBy::                        $:  # Author of last commit.
-# $LastChangedDate::                      $:  # Date of last commit.
-
-# pylint: disable=print-statement
 
 """ Functions to replace variables in a string with their values from a isinstance(dict) object """
 
