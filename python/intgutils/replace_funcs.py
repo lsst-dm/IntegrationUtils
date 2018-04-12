@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-""" Functions to replace variables in a string with their values from a isinstance(dict) object """
+"""Functions to replace variables in a string with their values from a dict.
+"""
 
 import copy
 import re
@@ -10,9 +11,10 @@ import despymisc.miscutils as miscutils
 import intgutils.intgdefs as intgdefs
 import despyfitsutils.fitsutils as fitsutils
 
-def replace_vars_single(instr, valdict, opts=None):
-    """ Return single instr after replacing vars """
 
+def replace_vars_single(instr, valdict, opts=None):
+    """Return single instr after replacing vars.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 
@@ -34,8 +36,8 @@ def replace_vars_single(instr, valdict, opts=None):
 
 
 def replace_vars_type(instr, valdict, required, stype, opts=None):
-    """ Search given string for variables of 1 type and replace """
-
+    """Search given string for variables of 1 type and replace.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 
@@ -155,8 +157,8 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
 
 
 def replace_vars_loop(valpair, valdict, opts=None):
-    """ Expand variables that have multiple values (e.g., band, ccdnum) """
-
+    """Expand variables that have multiple values (e.g., band, ccdnum).
+    """
     #assert(isinstance(valdict, dict))
 
     looptodo = [valpair]
@@ -181,7 +183,7 @@ def replace_vars_loop(valpair, valdict, opts=None):
             miscutils.fwdebug_print("\tloop search: newvar= %s" % newvar)
             miscutils.fwdebug_print("\tloop search: opts= %s" % opts)
 
-        (haskey, newval,  ) = valdict.search(newvar, opts)
+        (haskey, newval,) = valdict.search(newvar, opts)
 
         if haskey:
             if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
@@ -232,8 +234,8 @@ def replace_vars_loop(valpair, valdict, opts=None):
 
 
 def replace_vars(instr, valdict, opts=None):
-    """ Replace variables in given instr """
-
+    """Replace variables in given instr.
+    """
     assert(isinstance(instr, str))
     #assert(isinstance(valdict, dict))
 
@@ -253,7 +255,6 @@ def replace_vars(instr, valdict, opts=None):
     while not done and count < maxtries:
         count += 1
         done = True
-
 
         # header vars ($HEAD{)
         (done2, newstr, keep2) = replace_vars_type(newstr, valdict, True, 'HEAD', opts)
@@ -293,7 +294,6 @@ def replace_vars(instr, valdict, opts=None):
     if count >= maxtries:
         raise Exception("Error: replace_vars function aborting from infinite loop '%s'" % instr)
 
-
     #####
     valpair = (newstr, keep)
     valuedone = []
@@ -304,7 +304,6 @@ def replace_vars(instr, valdict, opts=None):
         else:
             opts = {'required': True, intgdefs.REPLACE_VARS: False}
         valuedone, keepdone = replace_vars_loop(valpair, valdict, opts)
-
 
     if miscutils.fwdebug_check(6, 'REPL_DEBUG'):
         miscutils.fwdebug_print("\tvaluedone = %s" % valuedone)
@@ -323,4 +322,3 @@ def replace_vars(instr, valdict, opts=None):
     if miscutils.fwdebug_check(5, 'REPL_DEBUG'):
         miscutils.fwdebug_print("END")
     return val2return
-
