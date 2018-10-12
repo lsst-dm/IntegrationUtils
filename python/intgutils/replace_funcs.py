@@ -5,7 +5,7 @@
 
 import copy
 import re
-import pyfits
+from astropy.io import fits
 
 import despymisc.miscutils as miscutils
 import intgutils.intgdefs as intgdefs
@@ -79,7 +79,7 @@ def replace_vars_type(instr, valdict, required, stype, opts=None):
             fname = varlist[0]
             if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
                 miscutils.fwdebug_print("\tHEAD variable fname: %s " % (fname))
-            hdulist = pyfits.open(fname, 'readonly')
+            hdulist = fits.open(fname, 'readonly')
             newval = []
             for key in varlist[1:]:
                 if miscutils.fwdebug_check(0, 'REPL_DEBUG'):
